@@ -68,10 +68,8 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-echo "DEBUG: After flag parsing: \$#=$#, \$1=$1, \$2=$2" >&2
 
 if [ $# -lt 2 ] || [ $# -gt 3 ]; then
-    echo "DEBUG: Argument count check failed: $# args" >&2
     usage
 fi
 
@@ -79,39 +77,30 @@ PROJECT_TYPE=$1
 PROJECT_PATH=$2
 # Third parameter (description) is accepted but not currently used in templates
 
-echo "DEBUG: PROJECT_TYPE=$PROJECT_TYPE, PROJECT_PATH=$PROJECT_PATH" >&2
 
 # Detect library path (auto-discovery)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-echo "DEBUG: SCRIPT_DIR=$SCRIPT_DIR" >&2
 LIBRARY_DIR="$(dirname "$SCRIPT_DIR")"
-echo "DEBUG: LIBRARY_DIR=$LIBRARY_DIR" >&2
 BOILERPLATES_DIR="$LIBRARY_DIR/boilerplates"
-echo "DEBUG: BOILERPLATES_DIR=$BOILERPLATES_DIR" >&2
 
 # Extract project name from path (for validation)
 PROJECT_NAME=$(basename "$PROJECT_PATH")
-echo "DEBUG: PROJECT_NAME=$PROJECT_NAME" >&2
 
 echo -e "${BLUE}🚀 Initializing ${GREEN}$PROJECT_TYPE${BLUE} project: ${GREEN}$PROJECT_NAME${NC}"
 echo ""
 
 # Validate project name (basename only)
-echo "DEBUG: Validating project name: $PROJECT_NAME" >&2
 if [[ ! "$PROJECT_NAME" =~ ^[a-z0-9-]+$ ]]; then
     echo -e "${RED}❌ Invalid project name: $PROJECT_NAME${NC}"
     echo "Project name must contain only lowercase letters, numbers, and hyphens"
     exit 1
 fi
-echo "DEBUG: Project name validation passed" >&2
 
 # Check if directory already exists
-echo "DEBUG: Checking if directory exists: $PROJECT_PATH" >&2
 if [ -d "$PROJECT_PATH" ]; then
-    echo -e "${RED}❌ Directory $PROJECT_PATH already exists!${NC}"
+    echo -e "${RED}❌ Directory $PROJECT_PATH already exists\!${NC}"
     exit 1
 fi
-echo "DEBUG: Directory does not exist, proceeding" >&2
 
 # Create parent directory if it doesn't exist
 PARENT_DIR=$(dirname "$PROJECT_PATH")
@@ -126,20 +115,16 @@ mkdir -p "$PROJECT_PATH/.claude/docs/patterns"
 # Step 2: Copy boilerplate based on type
 echo -e "${YELLOW}📋 Copying boilerplate...${NC}"
 
-echo "DEBUG: Checking boilerplate for PROJECT_TYPE=$PROJECT_TYPE" >&2
 case $PROJECT_TYPE in
     webapp)
-        echo "DEBUG: Checking webapp boilerplate at: $BOILERPLATES_DIR/webapp-boilerplate" >&2
         if [ ! -d "$BOILERPLATES_DIR/webapp-boilerplate" ]; then
             echo -e "${RED}❌ webapp-boilerplate not found at $BOILERPLATES_DIR/webapp-boilerplate${NC}"
             echo "Please ensure Claude Code Library is properly installed."
             rm -rf "$PROJECT_PATH"
             exit 1
         fi
-        echo "DEBUG: Boilerplate found, copying..." >&2
         cp -r "$BOILERPLATES_DIR/webapp-boilerplate/"* "$PROJECT_PATH/"
         cp -r "$BOILERPLATES_DIR/webapp-boilerplate/".* "$PROJECT_PATH/" 2>/dev/null || true
-        echo "DEBUG: Boilerplate copied successfully" >&2
         ;;
     website)
         echo -e "${RED}❌ website boilerplate not yet implemented${NC}"
@@ -177,38 +162,22 @@ esac
 echo -e "${YELLOW}🔧 Customizing templates...${NC}"
 
 # Convert project-name to PascalCase for PROJECT_NAME_PASCAL
-echo "DEBUG: Converting PROJECT_NAME to PascalCase..." >&2
 PROJECT_NAME_PASCAL=$(echo "$PROJECT_NAME" | sed -E 's/(^|-)([a-z])/\U\2/g')
-echo "DEBUG: PROJECT_NAME_PASCAL=$PROJECT_NAME_PASCAL" >&2
 CURRENT_DATE=$(date +%Y-%m-%d)
-echo "DEBUG: CURRENT_DATE=$CURRENT_DATE" >&2
 
 # Find and replace in all markdown, json, and config files
-echo "DEBUG: Replacing {{PROJECT_NAME}} with $PROJECT_NAME..." >&2
 find "$PROJECT_PATH" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -exec sed -i "s|{{PROJECT_NAME}}|$PROJECT_NAME|g" {} \;
-echo "DEBUG: Replaced {{PROJECT_NAME}}" >&2
 
-echo "DEBUG: Replacing {{PROJECT_NAME_PASCAL}} with $PROJECT_NAME_PASCAL..." >&2
 find "$PROJECT_PATH" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -exec sed -i "s|{{PROJECT_NAME_PASCAL}}|$PROJECT_NAME_PASCAL|g" {} \;
-echo "DEBUG: Replaced {{PROJECT_NAME_PASCAL}}" >&2
 
-echo "DEBUG: Replacing {{DATE}} with $CURRENT_DATE..." >&2
 find "$PROJECT_PATH" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -exec sed -i "s|{{DATE}}|$CURRENT_DATE|g" {} \;
-echo "DEBUG: Replaced {{DATE}}" >&2
 
 # Step 4: Initialize Git (if not already)
-echo "DEBUG: Checking if .git exists at $PROJECT_PATH/.git" >&2
 if [ ! -d "$PROJECT_PATH/.git" ]; then
     echo -e "${YELLOW}🔗 Initializing Git repository...${NC}"
-    echo "DEBUG: cd to $PROJECT_PATH" >&2
     cd "$PROJECT_PATH"
-    echo "DEBUG: Running git init..." >&2
     git init -q
-    echo "DEBUG: Git init completed" >&2
-    echo "DEBUG: Running git add ." >&2
     git add .
-    echo "DEBUG: Git add completed" >&2
-    echo "DEBUG: Running git commit..." >&2
     git commit -q -m "chore: initial project setup
 
 Initialized $PROJECT_TYPE project with Claude Code Library boilerplate.
@@ -220,22 +189,15 @@ Includes:
 
 🤖 Generated with Claude Code Library v$VERSION
 "
-    echo "DEBUG: Git commit completed" >&2
     cd - > /dev/null
-    echo "DEBUG: Returned to previous directory" >&2
 else
-    echo "DEBUG: .git already exists, skipping git init" >&2
 fi
 
-echo "DEBUG: Git section completed, SKIP_DEPS=$SKIP_DEPS" >&2
 
 # Step 5: Install dependencies (if applicable)
-echo "DEBUG: Entering dependency installation section" >&2
 if [ "$SKIP_DEPS" = true ]; then
-    echo "DEBUG: SKIP_DEPS is true, skipping" >&2
     echo -e "${YELLOW}📦 Skipping dependency installation (--skip-deps flag)${NC}"
 else
-    echo "DEBUG: SKIP_DEPS is false, installing dependencies" >&2
     echo -e "${YELLOW}📦 Installing dependencies...${NC}"
     cd "$PROJECT_PATH"
 
@@ -266,46 +228,27 @@ else
     cd - > /dev/null
 fi
 
-echo "DEBUG: Dependency section completed" >&2
 
 # Step 6: Run initial validation (if validate-structure.sh exists)
-echo "DEBUG: Checking for validate-structure.sh at $SCRIPT_DIR/validate-structure.sh" >&2
 if [ -f "$SCRIPT_DIR/validate-structure.sh" ]; then
-    echo "DEBUG: validate-structure.sh found, running validation..." >&2
     echo -e "${YELLOW}✅ Validating structure...${NC}"
     "$SCRIPT_DIR/validate-structure.sh" "$PROJECT_PATH" || true
-    echo "DEBUG: Validation completed (or true fallback)" >&2
 else
-    echo "DEBUG: validate-structure.sh not found" >&2
     echo -e "${YELLOW}⚠️  validate-structure.sh not found, skipping validation${NC}"
 fi
 
-echo "DEBUG: Validation section completed" >&2
 
 # Success!
-echo "DEBUG: Starting success message section" >&2
 echo ""
-echo "DEBUG: After blank line" >&2
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo "DEBUG: After first border" >&2
-echo -e "${GREEN}✨ Project initialized successfully!${NC}"
-echo "DEBUG: After success message" >&2
+echo -e "${GREEN}✨ Project initialized successfully\!${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo "DEBUG: After second border" >&2
 echo ""
-echo "DEBUG: After final blank line" >&2
-echo "DEBUG: About to print Next steps" >&2
 echo -e "${BLUE}Next steps:${NC}"
-echo "DEBUG: Printed Next steps, about to print cd command" >&2
 echo -e "  1. ${YELLOW}cd $PROJECT_NAME${NC}"
-echo "DEBUG: Printed cd command" >&2
-echo "DEBUG: About to print step 2" >&2
 echo -e "  2. ${YELLOW}Review .claude/CLAUDE.md${NC} and customize for your project"
-echo "DEBUG: Printed step 2" >&2
-echo "DEBUG: About to print step 3" >&2
 echo -e "  3. ${YELLOW}Run morning-setup.sh${NC} to load context (or it will run automatically on cd)"
-echo "DEBUG: Printed step 3" >&2
-echo -e "  4. ${YELLOW}Start development!${NC}"
+echo -e "  4. ${YELLOW}Start development\!${NC}"
 echo ""
 echo -e "${BLUE}Quick commands:${NC}"
 
@@ -333,7 +276,7 @@ echo ""
 echo -e "${BLUE}📚 Documentation:${NC} .claude/docs/"
 echo -e "${BLUE}🔧 Patterns:${NC} .claude/docs/patterns/CODE_PATTERNS.md"
 echo ""
-echo -e "${GREEN}Happy coding! 🚀${NC}"
+echo -e "${GREEN}Happy coding\! 🚀${NC}"
 
 # Explicit successful exit
 exit 0
