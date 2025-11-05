@@ -66,7 +66,7 @@ WEBAPP_TEST_DIR="$TEST_TEMP_DIR/test-webapp-init"
 mkdir -p "$WEBAPP_TEST_DIR"
 
 # Initialize a webapp project (skip deps for faster CI testing)
-if "$LIBRARY_ROOT/scripts/init-project.sh" --skip-deps webapp "$WEBAPP_TEST_DIR/my-webapp" "Test Webapp" >/dev/null 2>&1; then
+if "$LIBRARY_ROOT/scripts/init-project.sh" --skip-deps webapp "$WEBAPP_TEST_DIR/my-webapp" "Test Webapp" >/dev/null; then
     # Validate the created project using validation script
     if "$LIBRARY_ROOT/scripts/validate-project-structure.sh" "$WEBAPP_TEST_DIR/my-webapp" webapp >/dev/null 2>&1; then
         pass "Initialized webapp passes structure validation"

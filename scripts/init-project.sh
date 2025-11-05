@@ -68,13 +68,18 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+echo "DEBUG: After flag parsing: \$#=$#, \$1=$1, \$2=$2" >&2
+
 if [ $# -lt 2 ] || [ $# -gt 3 ]; then
+    echo "DEBUG: Argument count check failed: $# args" >&2
     usage
 fi
 
 PROJECT_TYPE=$1
 PROJECT_PATH=$2
 # Third parameter (description) is accepted but not currently used in templates
+
+echo "DEBUG: PROJECT_TYPE=$PROJECT_TYPE, PROJECT_PATH=$PROJECT_PATH" >&2
 
 # Detect library path (auto-discovery)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
