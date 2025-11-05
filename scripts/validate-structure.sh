@@ -56,7 +56,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --ci)
-            CI_MODE=true
+            # CI mode enabled
             # Disable colors in CI mode
             RED=''
             GREEN=''

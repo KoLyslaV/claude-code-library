@@ -13,7 +13,6 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
-MAGENTA='\033[0;35m'
 NC='\033[0m' # No Color
 
 usage() {
@@ -200,7 +199,6 @@ echo ""
 echo -e "${YELLOW}1. Reproduce the Issue${NC}"
 read -p "   Can you reproduce the issue consistently? (y/n) " -n 1 -r
 echo
-REPRODUCIBLE=$REPLY
 
 echo ""
 echo -e "${YELLOW}2. Check Error Messages${NC}"

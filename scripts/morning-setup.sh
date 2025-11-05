@@ -13,7 +13,6 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
-MAGENTA='\033[0;35m'
 NC='\033[0m' # No Color
 
 usage() {
@@ -112,7 +111,7 @@ echo -e "Current branch: ${GREEN}$CURRENT_BRANCH${NC}"
 if ! git diff-index --quiet HEAD -- 2>/dev/null; then
     echo -e "${YELLOW}⚠️  Uncommitted changes detected:${NC}"
     git status --short | head -10
-    if [ $(git status --short | wc -l) -gt 10 ]; then
+    if [ "$(git status --short | wc -l)" -gt 10 ]; then
         echo "... and $(( $(git status --short | wc -l) - 10 )) more files"
     fi
 else

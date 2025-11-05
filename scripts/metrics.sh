@@ -251,9 +251,12 @@ generate_report() {
     echo "   ──────────────────────────────────────────────────────"
 
     for script in init-project morning-setup validate-structure anti-pattern-detector feature-workflow bug-hunter doc-sprint crisis-mode; do
-        local count=$(jq -r ".scripts[\"$script\"].count // 0" "$METRICS_DIR/usage.json")
-        local time_per=$(jq -r ".scripts[\"$script\"].time_saved_min // 0" "$METRICS_DIR/usage.json")
-        local saved=$(echo "$count * $time_per" | bc 2>/dev/null || echo "0")
+        local count
+        local time_per
+        local saved
+        count=$(jq -r ".scripts[\"$script\"].count // 0" "$METRICS_DIR/usage.json")
+        time_per=$(jq -r ".scripts[\"$script\"].time_saved_min // 0" "$METRICS_DIR/usage.json")
+        saved=$(echo "$count * $time_per" | bc 2>/dev/null || echo "0")
 
         if [ "$count" -gt 0 ]; then
             printf "   %-25s %-10s %-15s\n" "$script" "$count" "${saved}m"
@@ -262,9 +265,12 @@ generate_report() {
     echo ""
 
     echo -e "${BLUE}3. Boilerplate Usage${NC}"
-    local webapp=$(jq -r '.boilerplates.webapp // 0' "$METRICS_DIR/usage.json")
-    local website=$(jq -r '.boilerplates.website // 0' "$METRICS_DIR/usage.json")
-    local python=$(jq -r '.boilerplates["python-cli"] // 0' "$METRICS_DIR/usage.json")
+    local webapp
+    local website
+    local python
+    webapp=$(jq -r '.boilerplates.webapp // 0' "$METRICS_DIR/usage.json")
+    website=$(jq -r '.boilerplates.website // 0' "$METRICS_DIR/usage.json")
+    python=$(jq -r '.boilerplates["python-cli"] // 0' "$METRICS_DIR/usage.json")
 
     printf "   %-15s %s\n" "webapp:" "$webapp projects"
     printf "   %-15s %s\n" "website:" "$website projects"
@@ -272,9 +278,12 @@ generate_report() {
     echo ""
 
     echo -e "${BLUE}4. ROI Analysis${NC}"
-    local total_minutes=$(calculate_time_saved)
-    local total_hours=$(echo "scale=1; $total_minutes / 60" | bc 2>/dev/null || echo "0")
-    local total_days=$(echo "scale=1; $total_hours / 8" | bc 2>/dev/null || echo "0")
+    local total_minutes
+    local total_hours
+    local total_days
+    total_minutes=$(calculate_time_saved)
+    total_hours=$(echo "scale=1; $total_minutes / 60" | bc 2>/dev/null || echo "0")
+    total_days=$(echo "scale=1; $total_hours / 8" | bc 2>/dev/null || echo "0")
 
     echo -e "   Total time saved: ${GREEN}$total_minutes minutes${NC}"
     echo -e "   Equivalent to:    ${GREEN}$total_hours hours${NC}"
@@ -282,12 +291,16 @@ generate_report() {
 
     # Calculate weekly savings if enough data
     if [ "$first_use" != "N/A" ] && [ "$first_use" != "null" ] && [ "$first_use" != "" ]; then
-        local first_epoch=$(date -d "$first_use" +%s 2>/dev/null || echo "0")
-        local now_epoch=$(date +%s)
-        local weeks=$(echo "scale=1; ($now_epoch - $first_epoch) / 604800" | bc 2>/dev/null || echo "1")
+        local first_epoch
+        local now_epoch
+        local weeks
+        first_epoch=$(date -d "$first_use" +%s 2>/dev/null || echo "0")
+        now_epoch=$(date +%s)
+        weeks=$(echo "scale=1; ($now_epoch - $first_epoch) / 604800" | bc 2>/dev/null || echo "1")
 
         if (( $(echo "$weeks > 0" | bc -l 2>/dev/null || echo "0") )); then
-            local weekly_savings=$(echo "scale=1; $total_hours / $weeks" | bc 2>/dev/null || echo "0")
+            local weekly_savings
+            weekly_savings=$(echo "scale=1; $total_hours / $weeks" | bc 2>/dev/null || echo "0")
             echo -e "   Weekly average:   ${GREEN}$weekly_savings hours/week${NC}"
         fi
     fi
@@ -300,9 +313,12 @@ generate_report() {
     local best_script=""
 
     for script in init-project morning-setup validate-structure anti-pattern-detector feature-workflow bug-hunter doc-sprint crisis-mode; do
-        local count=$(jq -r ".scripts[\"$script\"].count // 0" "$METRICS_DIR/usage.json")
-        local time_per=$(jq -r ".scripts[\"$script\"].time_saved_min // 0" "$METRICS_DIR/usage.json")
-        local saved=$(echo "$count * $time_per" | bc 2>/dev/null || echo "0")
+        local count
+        local time_per
+        local saved
+        count=$(jq -r ".scripts[\"$script\"].count // 0" "$METRICS_DIR/usage.json")
+        time_per=$(jq -r ".scripts[\"$script\"].time_saved_min // 0" "$METRICS_DIR/usage.json")
+        saved=$(echo "$count * $time_per" | bc 2>/dev/null || echo "0")
 
         if (( $(echo "$saved > $max_saved" | bc -l 2>/dev/null || echo "0") )); then
             max_saved=$saved
@@ -334,8 +350,10 @@ calculate_roi() {
     fi
 
     # Calculate time saved
-    local total_minutes=$(calculate_time_saved)
-    local total_hours=$(echo "scale=2; $total_minutes / 60" | bc 2>/dev/null || echo "0")
+    local total_minutes
+    local total_hours
+    total_minutes=$(calculate_time_saved)
+    total_hours=$(echo "scale=2; $total_minutes / 60" | bc 2>/dev/null || echo "0")
 
     echo -e "${YELLOW}📊 Time Savings:${NC}"
     echo -e "   Total time saved: ${GREEN}$total_hours hours${NC}"
@@ -348,7 +366,8 @@ calculate_roi() {
 
     # Calculate at different rates
     for rate in 50 75 100 150; do
-        local value=$(echo "scale=2; $total_hours * $rate" | bc 2>/dev/null || echo "0")
+        local value
+        value=$(echo "scale=2; $total_hours * $rate" | bc 2>/dev/null || echo "0")
         printf "   At \$${rate}/hour:  ${GREEN}\$%.2f${NC} saved\n" "$value"
     done
     echo ""
@@ -358,9 +377,12 @@ calculate_roi() {
     echo -e "   Setup time:       ${CYAN}~30 minutes${NC} (library installation)"
     echo -e "   Time saved:       ${GREEN}$total_hours hours${NC}"
 
-    local setup_hours=$(echo "0.5" | bc)
-    local net_savings=$(echo "scale=2; $total_hours - $setup_hours" | bc 2>/dev/null || echo "0")
-    local roi_multiplier=$(echo "scale=1; $total_hours / $setup_hours" | bc 2>/dev/null || echo "0")
+    local setup_hours
+    local net_savings
+    local roi_multiplier
+    setup_hours=$(echo "0.5" | bc)
+    net_savings=$(echo "scale=2; $total_hours - $setup_hours" | bc 2>/dev/null || echo "0")
+    roi_multiplier=$(echo "scale=1; $total_hours / $setup_hours" | bc 2>/dev/null || echo "0")
 
     echo -e "   Net time saved:   ${GREEN}$net_savings hours${NC}"
     echo -e "   ROI multiplier:   ${GREEN}${roi_multiplier}x${NC}"
@@ -370,21 +392,28 @@ calculate_roi() {
     if [ "$total_hours" != "0" ]; then
         echo -e "${YELLOW}📈 Projected Annual Savings:${NC}"
 
-        local first_use=$(jq -r '.first_use // "N/A"' "$METRICS_DIR/usage.json")
+        local first_use
+        first_use=$(jq -r '.first_use // "N/A"' "$METRICS_DIR/usage.json")
         if [ "$first_use" != "N/A" ] && [ "$first_use" != "null" ] && [ "$first_use" != "" ]; then
-            local first_epoch=$(date -d "$first_use" +%s 2>/dev/null || echo "0")
-            local now_epoch=$(date +%s)
-            local days_used=$(( ($now_epoch - $first_epoch) / 86400 ))
+            local first_epoch
+            local now_epoch
+            local days_used
+            first_epoch=$(date -d "$first_use" +%s 2>/dev/null || echo "0")
+            now_epoch=$(date +%s)
+            days_used=$(( (now_epoch - first_epoch) / 86400 ))
 
             if [ "$days_used" -gt 0 ]; then
-                local daily_rate=$(echo "scale=4; $total_hours / $days_used" | bc 2>/dev/null || echo "0")
-                local annual_hours=$(echo "scale=1; $daily_rate * 365" | bc 2>/dev/null || echo "0")
+                local daily_rate
+                local annual_hours
+                daily_rate=$(echo "scale=4; $total_hours / $days_used" | bc 2>/dev/null || echo "0")
+                annual_hours=$(echo "scale=1; $daily_rate * 365" | bc 2>/dev/null || echo "0")
 
                 echo -e "   Based on ${days_used} days of usage:"
                 echo -e "   Projected annual savings: ${GREEN}$annual_hours hours/year${NC}"
 
                 # At $100/hour
-                local annual_value=$(echo "scale=2; $annual_hours * 100" | bc 2>/dev/null || echo "0")
+                local annual_value
+                annual_value=$(echo "scale=2; $annual_hours * 100" | bc 2>/dev/null || echo "0")
                 printf "   Monetary value (\$100/hr):  ${GREEN}\$%.2f/year${NC}\n" "$annual_value"
             fi
         fi
@@ -398,7 +427,8 @@ calculate_roi() {
 export_metrics() {
     init_metrics
 
-    local export_file="$METRICS_DIR/metrics-export-$(date +%Y%m%d-%H%M%S).json"
+    local export_file
+    export_file="$METRICS_DIR/metrics-export-$(date +%Y%m%d-%H%M%S).json"
 
     if ! command -v jq &> /dev/null; then
         echo -e "${YELLOW}⚠️  jq not installed - export disabled${NC}"
@@ -406,7 +436,8 @@ export_metrics() {
     fi
 
     # Add calculated fields
-    local total_minutes=$(calculate_time_saved)
+    local total_minutes
+    total_minutes=$(calculate_time_saved)
 
     jq ". + {\"total_time_saved_minutes\": $total_minutes}" "$METRICS_DIR/usage.json" > "$export_file"
 
