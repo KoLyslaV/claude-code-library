@@ -202,7 +202,7 @@ cd - > /dev/null
 # Step 6: Run initial validation (if validate-structure.sh exists)
 if [ -f "$SCRIPT_DIR/validate-structure.sh" ]; then
     echo -e "${YELLOW}✅ Validating structure...${NC}"
-    "$SCRIPT_DIR/validate-structure.sh" "$PROJECT_NAME" || true
+    "$SCRIPT_DIR/validate-structure.sh" "$PROJECT_PATH" || true
 else
     echo -e "${YELLOW}⚠️  validate-structure.sh not found, skipping validation${NC}"
 fi
