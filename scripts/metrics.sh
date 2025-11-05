@@ -172,9 +172,11 @@ show_summary() {
     # Calculate days used
     local days_used=0
     if [ "$first_use" != "N/A" ] && [ "$first_use" != "null" ] && [ "$first_use" != "" ]; then
-        local first_epoch=$(date -d "$first_use" +%s 2>/dev/null || echo "0")
-        local now_epoch=$(date +%s)
-        days_used=$(( ($now_epoch - $first_epoch) / 86400 ))
+        local first_epoch
+        local now_epoch
+        first_epoch=$(date -d "$first_use" +%s 2>/dev/null || echo "0")
+        now_epoch=$(date +%s)
+        days_used=$(( (now_epoch - first_epoch) / 86400 ))
     fi
 
     echo -e "${YELLOW}📅 Usage Period:${NC}"
@@ -185,15 +187,19 @@ show_summary() {
 
     # Most used scripts
     echo -e "${YELLOW}🔥 Most Used Scripts:${NC}"
-    local top_scripts=$(jq -r '.scripts | to_entries | sort_by(-.value.count) | .[0:3] | .[] | "  \(.key): \(.value.count) uses"' "$METRICS_DIR/usage.json")
+    local top_scripts
+    top_scripts=$(jq -r '.scripts | to_entries | sort_by(-.value.count) | .[0:3] | .[] | "  \(.key): \(.value.count) uses"' "$METRICS_DIR/usage.json")
     echo "$top_scripts"
     echo ""
 
     # Projects created
     echo -e "${YELLOW}📦 Projects Created:${NC}"
-    local webapp=$(jq -r '.boilerplates.webapp // 0' "$METRICS_DIR/usage.json")
-    local website=$(jq -r '.boilerplates.website // 0' "$METRICS_DIR/usage.json")
-    local python=$(jq -r '.boilerplates["python-cli"] // 0' "$METRICS_DIR/usage.json")
+    local webapp
+    local website
+    local python
+    webapp=$(jq -r '.boilerplates.webapp // 0' "$METRICS_DIR/usage.json")
+    website=$(jq -r '.boilerplates.website // 0' "$METRICS_DIR/usage.json")
+    python=$(jq -r '.boilerplates["python-cli"] // 0' "$METRICS_DIR/usage.json")
     local total_projects=$(( webapp + website + python ))
 
     echo -e "  webapp:      $webapp"
@@ -203,8 +209,10 @@ show_summary() {
     echo ""
 
     # Time saved
-    local total_minutes=$(calculate_time_saved)
-    local total_hours=$(echo "scale=1; $total_minutes / 60" | bc 2>/dev/null || echo "0")
+    local total_minutes
+    local total_hours
+    total_minutes=$(calculate_time_saved)
+    total_hours=$(echo "scale=1; $total_minutes / 60" | bc 2>/dev/null || echo "0")
 
     echo -e "${YELLOW}⏱️  Time Saved:${NC}"
     echo -e "  ${GREEN}$total_minutes minutes${NC} (${GREEN}$total_hours hours${NC})"
