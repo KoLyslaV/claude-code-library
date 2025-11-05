@@ -227,10 +227,15 @@ else
     echo "DEBUG: .git already exists, skipping git init" >&2
 fi
 
+echo "DEBUG: Git section completed, SKIP_DEPS=$SKIP_DEPS" >&2
+
 # Step 5: Install dependencies (if applicable)
+echo "DEBUG: Entering dependency installation section" >&2
 if [ "$SKIP_DEPS" = true ]; then
+    echo "DEBUG: SKIP_DEPS is true, skipping" >&2
     echo -e "${YELLOW}📦 Skipping dependency installation (--skip-deps flag)${NC}"
 else
+    echo "DEBUG: SKIP_DEPS is false, installing dependencies" >&2
     echo -e "${YELLOW}📦 Installing dependencies...${NC}"
     cd "$PROJECT_PATH"
 
