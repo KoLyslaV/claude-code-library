@@ -30,8 +30,9 @@ usage() {
     echo "Example: $0 webapp my-awesome-app \"My Awesome App\""
     echo ""
     echo "Options:"
-    echo "  --version   Show version"
-    echo "  --help      Show this help"
+    echo "  --version      Show version"
+    echo "  --help         Show this help"
+    echo "  --skip-deps    Skip dependency installation (for testing)"
     exit 1
 }
 
@@ -48,6 +49,24 @@ fi
 if [ "$1" = "--help" ]; then
     usage
 fi
+
+# Parse optional flags
+SKIP_DEPS=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --skip-deps)
+            SKIP_DEPS=true
+            shift
+            ;;
+        --version|--help)
+            # Already handled above
+            shift
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
 
 if [ $# -lt 2 ] || [ $# -gt 3 ]; then
     usage
@@ -170,34 +189,38 @@ Includes:
 fi
 
 # Step 5: Install dependencies (if applicable)
-echo -e "${YELLOW}📦 Installing dependencies...${NC}"
-cd "$PROJECT_PATH"
+if [ "$SKIP_DEPS" = true ]; then
+    echo -e "${YELLOW}📦 Skipping dependency installation (--skip-deps flag)${NC}"
+else
+    echo -e "${YELLOW}📦 Installing dependencies...${NC}"
+    cd "$PROJECT_PATH"
 
-case $PROJECT_TYPE in
-    webapp|website|game-2d)
-        if command -v pnpm &> /dev/null; then
-            echo "Using pnpm..."
-            pnpm install --silent
-        elif command -v npm &> /dev/null; then
-            echo "Using npm..."
-            npm install --silent --no-progress
-        else
-            echo -e "${RED}⚠️  No package manager found (npm/pnpm)${NC}"
-            echo "Please install dependencies manually: npm install"
-        fi
-        ;;
-    python-cli|python-api)
-        if command -v poetry &> /dev/null; then
-            echo "Using Poetry..."
-            poetry install
-        else
-            echo -e "${RED}⚠️  Poetry not found${NC}"
-            echo "Please install Poetry: curl -sSL https://install.python-poetry.org | python3 -"
-        fi
-        ;;
-esac
+    case $PROJECT_TYPE in
+        webapp|website|game-2d)
+            if command -v pnpm &> /dev/null; then
+                echo "Using pnpm..."
+                pnpm install --silent
+            elif command -v npm &> /dev/null; then
+                echo "Using npm..."
+                npm install --silent --no-progress
+            else
+                echo -e "${RED}⚠️  No package manager found (npm/pnpm)${NC}"
+                echo "Please install dependencies manually: npm install"
+            fi
+            ;;
+        python-cli|python-api)
+            if command -v poetry &> /dev/null; then
+                echo "Using Poetry..."
+                poetry install
+            else
+                echo -e "${RED}⚠️  Poetry not found${NC}"
+                echo "Please install Poetry: curl -sSL https://install.python-poetry.org | python3 -"
+            fi
+            ;;
+    esac
 
-cd - > /dev/null
+    cd - > /dev/null
+fi
 
 # Step 6: Run initial validation (if validate-structure.sh exists)
 if [ -f "$SCRIPT_DIR/validate-structure.sh" ]; then

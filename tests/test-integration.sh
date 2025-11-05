@@ -65,8 +65,8 @@ print_section "Testing init-project.sh creates valid webapp structure"
 WEBAPP_TEST_DIR="$TEST_TEMP_DIR/test-webapp-init"
 mkdir -p "$WEBAPP_TEST_DIR"
 
-# Initialize a webapp project
-if "$LIBRARY_ROOT/scripts/init-project.sh" webapp "$WEBAPP_TEST_DIR/my-webapp" "Test Webapp" >/dev/null 2>&1; then
+# Initialize a webapp project (skip deps for faster CI testing)
+if "$LIBRARY_ROOT/scripts/init-project.sh" --skip-deps webapp "$WEBAPP_TEST_DIR/my-webapp" "Test Webapp" >/dev/null 2>&1; then
     # Validate the created project using validation script
     if "$LIBRARY_ROOT/scripts/validate-project-structure.sh" "$WEBAPP_TEST_DIR/my-webapp" webapp >/dev/null 2>&1; then
         pass "Initialized webapp passes structure validation"
@@ -83,8 +83,8 @@ print_section "Testing init-project.sh creates valid website structure"
 WEBSITE_TEST_DIR="$TEST_TEMP_DIR/test-website-init"
 mkdir -p "$WEBSITE_TEST_DIR"
 
-# Initialize a website project
-if "$LIBRARY_ROOT/scripts/init-project.sh" website "$WEBSITE_TEST_DIR/my-website" "Test Website" >/dev/null 2>&1; then
+# Initialize a website project (skip deps for faster CI testing)
+if "$LIBRARY_ROOT/scripts/init-project.sh" --skip-deps website "$WEBSITE_TEST_DIR/my-website" "Test Website" >/dev/null 2>&1; then
     # Validate the created project using validation script
     if "$LIBRARY_ROOT/scripts/validate-project-structure.sh" "$WEBSITE_TEST_DIR/my-website" website >/dev/null 2>&1; then
         pass "Initialized website passes structure validation"
@@ -101,8 +101,8 @@ print_section "Testing init-project.sh creates valid python-cli structure"
 CLI_TEST_DIR="$TEST_TEMP_DIR/test-cli-init"
 mkdir -p "$CLI_TEST_DIR"
 
-# Initialize a python-cli project
-if "$LIBRARY_ROOT/scripts/init-project.sh" python-cli "$CLI_TEST_DIR/my-cli" "Test CLI" >/dev/null 2>&1; then
+# Initialize a python-cli project (skip deps for faster CI testing)
+if "$LIBRARY_ROOT/scripts/init-project.sh" --skip-deps python-cli "$CLI_TEST_DIR/my-cli" "Test CLI" >/dev/null 2>&1; then
     # Validate the created project using validation script
     if "$LIBRARY_ROOT/scripts/validate-project-structure.sh" "$CLI_TEST_DIR/my-cli" python-cli >/dev/null 2>&1; then
         pass "Initialized python-cli passes structure validation"
