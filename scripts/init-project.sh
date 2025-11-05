@@ -177,13 +177,24 @@ esac
 echo -e "${YELLOW}🔧 Customizing templates...${NC}"
 
 # Convert project-name to PascalCase for PROJECT_NAME_PASCAL
+echo "DEBUG: Converting PROJECT_NAME to PascalCase..." >&2
 PROJECT_NAME_PASCAL=$(echo "$PROJECT_NAME" | sed -E 's/(^|-)([a-z])/\U\2/g')
+echo "DEBUG: PROJECT_NAME_PASCAL=$PROJECT_NAME_PASCAL" >&2
 CURRENT_DATE=$(date +%Y-%m-%d)
+echo "DEBUG: CURRENT_DATE=$CURRENT_DATE" >&2
 
 # Find and replace in all markdown, json, and config files
+echo "DEBUG: Replacing {{PROJECT_NAME}} with $PROJECT_NAME..." >&2
 find "$PROJECT_PATH" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -exec sed -i "s|{{PROJECT_NAME}}|$PROJECT_NAME|g" {} \;
+echo "DEBUG: Replaced {{PROJECT_NAME}}" >&2
+
+echo "DEBUG: Replacing {{PROJECT_NAME_PASCAL}} with $PROJECT_NAME_PASCAL..." >&2
 find "$PROJECT_PATH" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -exec sed -i "s|{{PROJECT_NAME_PASCAL}}|$PROJECT_NAME_PASCAL|g" {} \;
+echo "DEBUG: Replaced {{PROJECT_NAME_PASCAL}}" >&2
+
+echo "DEBUG: Replacing {{DATE}} with $CURRENT_DATE..." >&2
 find "$PROJECT_PATH" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -exec sed -i "s|{{DATE}}|$CURRENT_DATE|g" {} \;
+echo "DEBUG: Replaced {{DATE}}" >&2
 
 # Step 4: Initialize Git (if not already)
 if [ ! -d "$PROJECT_PATH/.git" ]; then
