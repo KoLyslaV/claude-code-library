@@ -83,27 +83,35 @@ echo "DEBUG: PROJECT_TYPE=$PROJECT_TYPE, PROJECT_PATH=$PROJECT_PATH" >&2
 
 # Detect library path (auto-discovery)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+echo "DEBUG: SCRIPT_DIR=$SCRIPT_DIR" >&2
 LIBRARY_DIR="$(dirname "$SCRIPT_DIR")"
+echo "DEBUG: LIBRARY_DIR=$LIBRARY_DIR" >&2
 BOILERPLATES_DIR="$LIBRARY_DIR/boilerplates"
+echo "DEBUG: BOILERPLATES_DIR=$BOILERPLATES_DIR" >&2
 
 # Extract project name from path (for validation)
 PROJECT_NAME=$(basename "$PROJECT_PATH")
+echo "DEBUG: PROJECT_NAME=$PROJECT_NAME" >&2
 
 echo -e "${BLUE}🚀 Initializing ${GREEN}$PROJECT_TYPE${BLUE} project: ${GREEN}$PROJECT_NAME${NC}"
 echo ""
 
 # Validate project name (basename only)
+echo "DEBUG: Validating project name: $PROJECT_NAME" >&2
 if [[ ! "$PROJECT_NAME" =~ ^[a-z0-9-]+$ ]]; then
     echo -e "${RED}❌ Invalid project name: $PROJECT_NAME${NC}"
     echo "Project name must contain only lowercase letters, numbers, and hyphens"
     exit 1
 fi
+echo "DEBUG: Project name validation passed" >&2
 
 # Check if directory already exists
+echo "DEBUG: Checking if directory exists: $PROJECT_PATH" >&2
 if [ -d "$PROJECT_PATH" ]; then
     echo -e "${RED}❌ Directory $PROJECT_PATH already exists!${NC}"
     exit 1
 fi
+echo "DEBUG: Directory does not exist, proceeding" >&2
 
 # Create parent directory if it doesn't exist
 PARENT_DIR=$(dirname "$PROJECT_PATH")
@@ -118,16 +126,20 @@ mkdir -p "$PROJECT_PATH/.claude/docs/patterns"
 # Step 2: Copy boilerplate based on type
 echo -e "${YELLOW}📋 Copying boilerplate...${NC}"
 
+echo "DEBUG: Checking boilerplate for PROJECT_TYPE=$PROJECT_TYPE" >&2
 case $PROJECT_TYPE in
     webapp)
+        echo "DEBUG: Checking webapp boilerplate at: $BOILERPLATES_DIR/webapp-boilerplate" >&2
         if [ ! -d "$BOILERPLATES_DIR/webapp-boilerplate" ]; then
             echo -e "${RED}❌ webapp-boilerplate not found at $BOILERPLATES_DIR/webapp-boilerplate${NC}"
             echo "Please ensure Claude Code Library is properly installed."
             rm -rf "$PROJECT_PATH"
             exit 1
         fi
+        echo "DEBUG: Boilerplate found, copying..." >&2
         cp -r "$BOILERPLATES_DIR/webapp-boilerplate/"* "$PROJECT_PATH/"
         cp -r "$BOILERPLATES_DIR/webapp-boilerplate/".* "$PROJECT_PATH/" 2>/dev/null || true
+        echo "DEBUG: Boilerplate copied successfully" >&2
         ;;
     website)
         echo -e "${RED}❌ website boilerplate not yet implemented${NC}"
