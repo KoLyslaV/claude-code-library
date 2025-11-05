@@ -118,7 +118,7 @@ echo -e "${GREEN}✅ Environment captured${NC}"
 
 # 1.3: Process status
 echo -e "${YELLOW}Process status...${NC}"
-ps aux | grep -E "node|python|npm" > "$CRISIS_DIR/processes.txt" || true
+pgrep -a "node|python|npm" > "$CRISIS_DIR/processes.txt" 2>/dev/null || echo "No matching processes found" > "$CRISIS_DIR/processes.txt"
 echo -e "${GREEN}✅ Processes captured${NC}"
 
 echo ""
@@ -180,7 +180,7 @@ if [ -d ".git" ]; then
     RECENT_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | head -10)
     if [ -n "$RECENT_FILES" ]; then
         echo -e "${YELLOW}Recently changed files:${NC}"
-        echo "$RECENT_FILES" | sed 's/^/  - /'
+        while IFS= read -r line; do echo "  - $line"; done <<< "$RECENT_FILES"
         echo "$RECENT_FILES" > "$CRISIS_DIR/recent-changes.txt"
     fi
 fi

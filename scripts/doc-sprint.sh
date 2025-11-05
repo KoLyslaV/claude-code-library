@@ -99,33 +99,35 @@ EOF
 fi
 
 # Add new session entry
-echo "" >> "$HANDOFF_FILE"
-echo "## Session $CURRENT_DATE $CURRENT_TIME" >> "$HANDOFF_FILE"
-echo "" >> "$HANDOFF_FILE"
-echo "### What I Did" >> "$HANDOFF_FILE"
+{
+    echo ""
+    echo "## Session $CURRENT_DATE $CURRENT_TIME"
+    echo ""
+    echo "### What I Did"
 
-# Get recent git commits
-if [ -d ".git" ]; then
-    RECENT_COMMITS=$(git log --oneline --since="1 day ago" | head -5)
-    if [ -n "$RECENT_COMMITS" ]; then
-        echo "$RECENT_COMMITS" | sed 's/^/- /' >> "$HANDOFF_FILE"
+    # Get recent git commits
+    if [ -d ".git" ]; then
+        RECENT_COMMITS=$(git log --oneline --since="1 day ago" | head -5)
+        if [ -n "$RECENT_COMMITS" ]; then
+            while IFS= read -r line; do echo "- $line"; done <<< "$RECENT_COMMITS"
+        else
+            echo "- No recent commits"
+        fi
     else
-        echo "- No recent commits" >> "$HANDOFF_FILE"
+        echo "- (Manual entry required)"
     fi
-else
-    echo "- (Manual entry required)" >> "$HANDOFF_FILE"
-fi
 
-echo "" >> "$HANDOFF_FILE"
-echo "### What's Next" >> "$HANDOFF_FILE"
-echo "- [ ] (Add next steps)" >> "$HANDOFF_FILE"
-echo "" >> "$HANDOFF_FILE"
-echo "### Blockers" >> "$HANDOFF_FILE"
-echo "- None" >> "$HANDOFF_FILE"
-echo "" >> "$HANDOFF_FILE"
-echo "### Notes" >> "$HANDOFF_FILE"
-echo "- (Add any relevant notes)" >> "$HANDOFF_FILE"
-echo "" >> "$HANDOFF_FILE"
+    echo ""
+    echo "### What's Next"
+    echo "- [ ] (Add next steps)"
+    echo ""
+    echo "### Blockers"
+    echo "- None"
+    echo ""
+    echo "### Notes"
+    echo "- (Add any relevant notes)"
+    echo ""
+} >> "$HANDOFF_FILE"
 
 echo -e "${GREEN}✅ HANDOFF.md updated${NC}"
 echo ""
@@ -389,7 +391,7 @@ echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━
 echo ""
 
 echo -e "${BLUE}Documentation Files:${NC}"
-ls -lh .claude/docs/ 2>/dev/null | tail -n +2 | awk '{print "  " $9 " (" $5 ")"}'
+find .claude/docs/ -maxdepth 1 -type f -printf "  %f (%s bytes)\n" 2>/dev/null | sort
 echo ""
 
 echo -e "${CYAN}💡 Next steps:${NC}"
