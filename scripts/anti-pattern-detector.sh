@@ -490,7 +490,7 @@ if [ "$CI_MODE" = true ]; then
     echo "  \"patterns\": ["
     for i in "${!DETECTED_PATTERNS[@]}"; do
         echo "    ${DETECTED_PATTERNS[$i]}"
-        if [ $i -lt $((${#DETECTED_PATTERNS[@]} - 1)) ]; then
+        if [ "$i" -lt $((${#DETECTED_PATTERNS[@]} - 1)) ]; then
             echo ","
         fi
     done

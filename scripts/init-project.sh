@@ -135,9 +135,9 @@ PROJECT_NAME_PASCAL=$(echo "$PROJECT_NAME" | sed -E 's/(^|-)([a-z])/\U\2/g')
 CURRENT_DATE=$(date +%Y-%m-%d)
 
 # Find and replace in all markdown, json, and config files
-find "$PROJECT_NAME" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -exec sed -i "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" {} \;
-find "$PROJECT_NAME" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -exec sed -i "s/{{PROJECT_NAME_PASCAL}}/$PROJECT_NAME_PASCAL/g" {} \;
-find "$PROJECT_NAME" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -exec sed -i "s/{{DATE}}/$CURRENT_DATE/g" {} \;
+find "$PROJECT_NAME" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -exec sed -i "s|{{PROJECT_NAME}}|$PROJECT_NAME|g" {} \;
+find "$PROJECT_NAME" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -exec sed -i "s|{{PROJECT_NAME_PASCAL}}|$PROJECT_NAME_PASCAL|g" {} \;
+find "$PROJECT_NAME" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -exec sed -i "s|{{DATE}}|$CURRENT_DATE|g" {} \;
 
 # Step 4: Initialize Git (if not already)
 if [ ! -d "$PROJECT_NAME/.git" ]; then

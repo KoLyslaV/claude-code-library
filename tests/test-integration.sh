@@ -68,10 +68,10 @@ mkdir -p "$WEBAPP_TEST_DIR"
 # Initialize a webapp project
 if "$LIBRARY_ROOT/scripts/init-project.sh" webapp "$WEBAPP_TEST_DIR/my-webapp" "Test Webapp" >/dev/null 2>&1; then
     # Validate the created project using validation script
-    if "$LIBRARY_ROOT/scripts/validate-boilerplate.sh" "$LIBRARY_ROOT/boilerplates/webapp-boilerplate" >/dev/null 2>&1; then
-        pass "Initialized webapp passes boilerplate validation"
+    if "$LIBRARY_ROOT/scripts/validate-project-structure.sh" "$WEBAPP_TEST_DIR/my-webapp" webapp >/dev/null 2>&1; then
+        pass "Initialized webapp passes structure validation"
     else
-        fail "Initialized webapp fails boilerplate validation"
+        fail "Initialized webapp fails structure validation"
     fi
 else
     fail "Failed to initialize webapp project"
@@ -85,12 +85,11 @@ mkdir -p "$WEBSITE_TEST_DIR"
 
 # Initialize a website project
 if "$LIBRARY_ROOT/scripts/init-project.sh" website "$WEBSITE_TEST_DIR/my-website" "Test Website" >/dev/null 2>&1; then
-    # Check critical files exist
-    if [ -f "$WEBSITE_TEST_DIR/my-website/package.json" ] && \
-       [ -f "$WEBSITE_TEST_DIR/my-website/astro.config.mjs" ]; then
-        pass "Initialized website has required files"
+    # Validate the created project using validation script
+    if "$LIBRARY_ROOT/scripts/validate-project-structure.sh" "$WEBSITE_TEST_DIR/my-website" website >/dev/null 2>&1; then
+        pass "Initialized website passes structure validation"
     else
-        fail "Initialized website missing required files"
+        fail "Initialized website fails structure validation"
     fi
 else
     fail "Failed to initialize website project"
@@ -104,12 +103,11 @@ mkdir -p "$CLI_TEST_DIR"
 
 # Initialize a python-cli project
 if "$LIBRARY_ROOT/scripts/init-project.sh" python-cli "$CLI_TEST_DIR/my-cli" "Test CLI" >/dev/null 2>&1; then
-    # Check critical files exist
-    if [ -f "$CLI_TEST_DIR/my-cli/pyproject.toml" ] && \
-       [ -d "$CLI_TEST_DIR/my-cli/src" ]; then
-        pass "Initialized python-cli has required files"
+    # Validate the created project using validation script
+    if "$LIBRARY_ROOT/scripts/validate-project-structure.sh" "$CLI_TEST_DIR/my-cli" python-cli >/dev/null 2>&1; then
+        pass "Initialized python-cli passes structure validation"
     else
-        fail "Initialized python-cli missing required files"
+        fail "Initialized python-cli fails structure validation"
     fi
 else
     fail "Failed to initialize python-cli project"
