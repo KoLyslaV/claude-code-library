@@ -283,11 +283,17 @@ fi
 echo "DEBUG: Validation section completed" >&2
 
 # Success!
+echo "DEBUG: Starting success message section" >&2
 echo ""
+echo "DEBUG: After blank line" >&2
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo "DEBUG: After first border" >&2
 echo -e "${GREEN}✨ Project initialized successfully!${NC}"
+echo "DEBUG: After success message" >&2
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo "DEBUG: After second border" >&2
 echo ""
+echo "DEBUG: After final blank line" >&2
 echo -e "${BLUE}Next steps:${NC}"
 echo -e "  1. ${YELLOW}cd $PROJECT_NAME${NC}"
 echo -e "  2. ${YELLOW}Review .claude/CLAUDE.md${NC} and customize for your project"
