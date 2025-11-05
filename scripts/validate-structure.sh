@@ -46,7 +46,6 @@ usage() {
 # Parse arguments
 PROJECT_PATH="."
 STRICT_MODE=false
-CI_MODE=false
 FIX_MODE=false
 
 while [[ $# -gt 0 ]]; do

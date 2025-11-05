@@ -448,7 +448,7 @@ export_metrics() {
 # Reset metrics
 reset_metrics() {
     echo -e "${YELLOW}⚠️  This will delete all usage metrics!${NC}"
-    read -p "Are you sure? (yes/no): " confirmation
+    read -r -p "Are you sure? (yes/no): " confirmation
 
     if [ "$confirmation" = "yes" ]; then
         rm -rf "$METRICS_DIR"

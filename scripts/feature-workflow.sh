@@ -118,7 +118,7 @@ if [ "$SKIP_BRANCH" = false ]; then
     # Check if branch already exists
     if git show-ref --quiet refs/heads/"$BRANCH_NAME"; then
         echo -e "${YELLOW}⚠️  Branch $BRANCH_NAME already exists${NC}"
-        read -p "Switch to existing branch? (y/n) " -n 1 -r
+        read -r -p "Switch to existing branch? (y/n) " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             git checkout "$BRANCH_NAME"
@@ -183,7 +183,7 @@ echo -e "   ${GREEN}mcp__serena__search_for_pattern(\"$SEARCH_TERM\")${NC}"
 echo -e "   ${GREEN}mcp__serena__get_symbols_overview(\"relevant_file.ts\")${NC}"
 echo ""
 
-read -p "Press Enter to continue to implementation phase..."
+read -r -p "Press Enter to continue to implementation phase..."
 echo ""
 
 # =============================================================================
@@ -210,7 +210,7 @@ echo "    - [ ] UX improved"
 echo "    - [ ] Code reviewed"
 echo ""
 
-read -p "Have you completed L0 (MVP)? (y/n) " -n 1 -r
+read -r -p "Have you completed L0 (MVP)? (y/n) " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     echo -e "${YELLOW}Focus on getting L0 working first!${NC}"
@@ -235,7 +235,7 @@ if [ "$SKIP_TESTS" = false ]; then
     echo "  - [ ] Error scenarios tested"
     echo ""
 
-    read -p "Run tests now? (y/n) " -n 1 -r
+    read -r -p "Run tests now? (y/n) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         # Detect project type and run appropriate tests
@@ -295,12 +295,12 @@ echo "  - [ ] Documentation updated"
 echo "  - [ ] TODO.md updated"
 echo ""
 
-read -p "Create commit for $FEATURE_NAME? (y/n) " -n 1 -r
+read -r -p "Create commit for $FEATURE_NAME? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     git status
     echo ""
-    read -p "Review changes above. Proceed with commit? (y/n) " -n 1 -r
+    read -r -p "Review changes above. Proceed with commit? (y/n) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         git add .

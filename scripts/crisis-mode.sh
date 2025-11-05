@@ -74,7 +74,7 @@ done
 # Get issue description if not provided
 if [ -z "$ISSUE_DESC" ]; then
     echo -e "${YELLOW}What's the issue you're experiencing?${NC}"
-    read -p "> " ISSUE_DESC
+    read -r -p "> " ISSUE_DESC
 fi
 
 echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -197,7 +197,7 @@ echo -e "${CYAN}Work through this checklist:${NC}"
 echo ""
 
 echo -e "${YELLOW}1. Reproduce the Issue${NC}"
-read -p "   Can you reproduce the issue consistently? (y/n) " -n 1 -r
+read -r -p "   Can you reproduce the issue consistently? (y/n) " -n 1 -r
 echo
 
 echo ""
@@ -205,13 +205,13 @@ echo -e "${YELLOW}2. Check Error Messages${NC}"
 echo "   - Look in browser console (F12)"
 echo "   - Check terminal output"
 echo "   - Review server logs"
-read -p "   Found any error messages? (y/n) " -n 1 -r
+read -r -p "   Found any error messages? (y/n) " -n 1 -r
 echo
 HAS_ERROR_MSG=$REPLY
 
 if [[ $HAS_ERROR_MSG =~ ^[Yy]$ ]]; then
     echo "   Enter error message (first line):"
-    read -p "   > " ERROR_MESSAGE
+    read -r -p "   > " ERROR_MESSAGE
     echo "$ERROR_MESSAGE" > "$CRISIS_DIR/error-message.txt"
 fi
 
@@ -228,7 +228,7 @@ if [ -d ".git" ]; then
     git log --oneline -5 | sed 's/^/   /'
 
     echo ""
-    read -p "   Is the issue related to recent commits? (y/n) " -n 1 -r
+    read -r -p "   Is the issue related to recent commits? (y/n) " -n 1 -r
     echo
     RECENT_COMMIT_ISSUE=$REPLY
 
@@ -248,7 +248,7 @@ echo "   - Try: npm ci (clean install)"
 echo "   - Check: package-lock.json for conflicts"
 
 echo ""
-read -p "   Try clean dependency install? (y/n) " -n 1 -r
+read -r -p "   Try clean dependency install? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo -e "${CYAN}Cleaning and reinstalling...${NC}"
@@ -282,7 +282,7 @@ if [ -d ".git" ]; then
     echo "   git checkout <commit-hash>"
     echo ""
 
-    read -p "Do you want to stash current changes? (y/n) " -n 1 -r
+    read -r -p "Do you want to stash current changes? (y/n) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         git stash save "crisis-mode-backup-$(date +%Y%m%d_%H%M%S)"
@@ -302,7 +302,7 @@ if [ "$SAVE_STATE" = true ] || [[ $REPLY =~ ^[Yy]$ ]]; then
     mkdir -p .claude/docs/patterns
 
     echo -e "${YELLOW}How did you fix the issue?${NC}"
-    read -p "Solution: " SOLUTION
+    read -r -p "Solution: " SOLUTION
 
     BUGS_FIXED_FILE=".claude/docs/patterns/BUGS_FIXED.md"
 
