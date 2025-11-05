@@ -5,7 +5,6 @@
 
 set -e
 
-VERSION="1.0.0"
 TESTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIBRARY_ROOT="$(dirname "$TESTS_DIR")"
 
@@ -190,7 +189,8 @@ skip_test() {
 
 # Setup and teardown helpers
 setup_test_env() {
-    export TEST_TEMP_DIR=$(mktemp -d)
+    TEST_TEMP_DIR=$(mktemp -d)
+    export TEST_TEMP_DIR
     export LIBRARY_ROOT
     export TESTS_DIR
 }
@@ -204,7 +204,8 @@ teardown_test_env() {
 # Run a test file
 run_test_file() {
     local test_file="$1"
-    local test_name=$(basename "$test_file" .sh)
+    local test_name
+    test_name=$(basename "$test_file" .sh)
 
     echo ""
     echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -221,7 +222,8 @@ run_test_file() {
     fi
 
     # Find and run all test functions
-    local test_functions=$(declare -F | grep -o "test_[^ ]*" || true)
+    local test_functions
+    test_functions=$(declare -F | grep -o "test_[^ ]*" || true)
 
     if [ -z "$test_functions" ]; then
         echo -e "${YELLOW}  No test functions found${NC}"
@@ -299,7 +301,8 @@ main() {
         fi
     else
         # Run all test files
-        local test_files=$(find "$TESTS_DIR" -name "test-*.sh" | sort)
+        local test_files
+        test_files=$(find "$TESTS_DIR" -name "test-*.sh" | sort)
 
         if [ -z "$test_files" ]; then
             echo -e "${YELLOW}No test files found in $TESTS_DIR${NC}"

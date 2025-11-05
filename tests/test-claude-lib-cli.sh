@@ -67,19 +67,22 @@ test_claude_lib_help_bug_hunt() {
 
 # Test: claude-lib with no args shows usage
 test_claude_lib_no_args() {
-    local output=$("$LIBRARY_ROOT/scripts/claude-lib" 2>&1)
+    local output
+    output=$("$LIBRARY_ROOT/scripts/claude-lib" 2>&1)
     assert_contains "$output" "USAGE:" "No args shows usage"
 }
 
 # Test: claude-lib with invalid command shows error
 test_claude_lib_invalid_command() {
-    local output=$("$LIBRARY_ROOT/scripts/claude-lib" invalid-command 2>&1 || true)
+    local output
+    output=$("$LIBRARY_ROOT/scripts/claude-lib" invalid-command 2>&1 || true)
     assert_contains "$output" "Unknown command" "Invalid command shows error"
 }
 
 # Test: All documented commands exist in help
 test_all_commands_in_help() {
-    local output=$("$LIBRARY_ROOT/scripts/claude-lib" --help 2>&1)
+    local output
+    output=$("$LIBRARY_ROOT/scripts/claude-lib" --help 2>&1)
 
     local commands=(
         "init"
