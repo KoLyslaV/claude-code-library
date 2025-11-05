@@ -90,7 +90,8 @@ log_usage() {
 
     # Use jq to update JSON if available, else skip (metrics are optional)
     if command -v jq &> /dev/null; then
-        local tmp_file=$(mktemp)
+        local tmp_file
+        tmp_file=$(mktemp)
 
         # Update script count
         jq ".scripts[\"$script_name\"].count += 1 | .last_use = \"$TIMESTAMP\"" \
@@ -113,7 +114,8 @@ log_boilerplate() {
     init_metrics
 
     if command -v jq &> /dev/null; then
-        local tmp_file=$(mktemp)
+        local tmp_file
+        tmp_file=$(mktemp)
         jq ".boilerplates[\"$boilerplate\"] += 1" \
            "$METRICS_DIR/usage.json" > "$tmp_file"
         mv "$tmp_file" "$METRICS_DIR/usage.json"
@@ -134,9 +136,12 @@ calculate_time_saved() {
 
     # Calculate for each script
     for script in init-project morning-setup validate-structure anti-pattern-detector feature-workflow bug-hunter doc-sprint crisis-mode; do
-        local count=$(jq -r ".scripts[\"$script\"].count // 0" "$METRICS_DIR/usage.json")
-        local time_per=$(jq -r ".scripts[\"$script\"].time_saved_min // 0" "$METRICS_DIR/usage.json")
-        local saved=$(echo "$count * $time_per" | bc 2>/dev/null || echo "0")
+        local count
+        local time_per
+        local saved
+        count=$(jq -r ".scripts[\"$script\"].count // 0" "$METRICS_DIR/usage.json")
+        time_per=$(jq -r ".scripts[\"$script\"].time_saved_min // 0" "$METRICS_DIR/usage.json")
+        saved=$(echo "$count * $time_per" | bc 2>/dev/null || echo "0")
         total_minutes=$(echo "$total_minutes + $saved" | bc 2>/dev/null || echo "$total_minutes")
     done
 
@@ -159,8 +164,10 @@ show_summary() {
     fi
 
     # Parse metrics
-    local first_use=$(jq -r '.first_use // "N/A"' "$METRICS_DIR/usage.json")
-    local last_use=$(jq -r '.last_use // "N/A"' "$METRICS_DIR/usage.json")
+    local first_use
+    local last_use
+    first_use=$(jq -r '.first_use // "N/A"' "$METRICS_DIR/usage.json")
+    last_use=$(jq -r '.last_use // "N/A"' "$METRICS_DIR/usage.json")
 
     # Calculate days used
     local days_used=0
@@ -221,8 +228,10 @@ generate_report() {
     fi
 
     # Parse metrics
-    local first_use=$(jq -r '.first_use // "N/A"' "$METRICS_DIR/usage.json")
-    local last_use=$(jq -r '.last_use // "N/A"' "$METRICS_DIR/usage.json")
+    local first_use
+    local last_use
+    first_use=$(jq -r '.first_use // "N/A"' "$METRICS_DIR/usage.json")
+    last_use=$(jq -r '.last_use // "N/A"' "$METRICS_DIR/usage.json")
 
     echo -e "${BLUE}1. Overview${NC}"
     echo -e "   First use: $first_use"
