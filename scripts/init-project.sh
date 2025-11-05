@@ -55,7 +55,7 @@ fi
 
 PROJECT_TYPE=$1
 PROJECT_PATH=$2
-PROJECT_DESCRIPTION="${3:-$(basename "$PROJECT_PATH")}"
+# Third parameter (description) is accepted but not currently used in templates
 
 # Detect library path (auto-discovery)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
