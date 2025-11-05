@@ -17,7 +17,7 @@ usage() {
     echo -e "${BLUE}Claude Code Library - Project Initializer${NC}"
     echo "Version: $VERSION"
     echo ""
-    echo "Usage: $0 <project-type> <project-name>"
+    echo "Usage: $0 <project-type> <project-name> [project-description]"
     echo ""
     echo "Project types:"
     echo "  webapp      - Interactive web app (Next.js 15)"
@@ -27,7 +27,7 @@ usage() {
     echo "  python-cli  - Python CLI tool [TODO]"
     echo "  python-api  - FastAPI backend [TODO]"
     echo ""
-    echo "Example: $0 webapp my-awesome-app"
+    echo "Example: $0 webapp my-awesome-app \"My Awesome App\""
     echo ""
     echo "Options:"
     echo "  --version   Show version"
@@ -49,22 +49,26 @@ if [ "$1" = "--help" ]; then
     usage
 fi
 
-if [ $# -ne 2 ]; then
+if [ $# -lt 2 ] || [ $# -gt 3 ]; then
     usage
 fi
 
 PROJECT_TYPE=$1
-PROJECT_NAME=$2
+PROJECT_PATH=$2
+PROJECT_DESCRIPTION="${3:-$(basename "$PROJECT_PATH")}"
 
 # Detect library path (auto-discovery)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIBRARY_DIR="$(dirname "$SCRIPT_DIR")"
 BOILERPLATES_DIR="$LIBRARY_DIR/boilerplates"
 
+# Extract project name from path (for validation)
+PROJECT_NAME=$(basename "$PROJECT_PATH")
+
 echo -e "${BLUE}🚀 Initializing ${GREEN}$PROJECT_TYPE${BLUE} project: ${GREEN}$PROJECT_NAME${NC}"
 echo ""
 
-# Validate project name
+# Validate project name (basename only)
 if [[ ! "$PROJECT_NAME" =~ ^[a-z0-9-]+$ ]]; then
     echo -e "${RED}❌ Invalid project name: $PROJECT_NAME${NC}"
     echo "Project name must contain only lowercase letters, numbers, and hyphens"
@@ -72,14 +76,20 @@ if [[ ! "$PROJECT_NAME" =~ ^[a-z0-9-]+$ ]]; then
 fi
 
 # Check if directory already exists
-if [ -d "$PROJECT_NAME" ]; then
-    echo -e "${RED}❌ Directory $PROJECT_NAME already exists!${NC}"
+if [ -d "$PROJECT_PATH" ]; then
+    echo -e "${RED}❌ Directory $PROJECT_PATH already exists!${NC}"
     exit 1
+fi
+
+# Create parent directory if it doesn't exist
+PARENT_DIR=$(dirname "$PROJECT_PATH")
+if [ ! -d "$PARENT_DIR" ]; then
+    mkdir -p "$PARENT_DIR"
 fi
 
 # Step 1: Create base directory structure
 echo -e "${YELLOW}📁 Creating directory structure...${NC}"
-mkdir -p "$PROJECT_NAME/.claude/docs/patterns"
+mkdir -p "$PROJECT_PATH/.claude/docs/patterns"
 
 # Step 2: Copy boilerplate based on type
 echo -e "${YELLOW}📋 Copying boilerplate...${NC}"
@@ -89,11 +99,11 @@ case $PROJECT_TYPE in
         if [ ! -d "$BOILERPLATES_DIR/webapp-boilerplate" ]; then
             echo -e "${RED}❌ webapp-boilerplate not found at $BOILERPLATES_DIR/webapp-boilerplate${NC}"
             echo "Please ensure Claude Code Library is properly installed."
-            rm -rf "$PROJECT_NAME"
+            rm -rf "$PROJECT_PATH"
             exit 1
         fi
-        cp -r "$BOILERPLATES_DIR/webapp-boilerplate/"* "$PROJECT_NAME/"
-        cp -r "$BOILERPLATES_DIR/webapp-boilerplate/".* "$PROJECT_NAME/" 2>/dev/null || true
+        cp -r "$BOILERPLATES_DIR/webapp-boilerplate/"* "$PROJECT_PATH/"
+        cp -r "$BOILERPLATES_DIR/webapp-boilerplate/".* "$PROJECT_PATH/" 2>/dev/null || true
         ;;
     website)
         echo -e "${RED}❌ website boilerplate not yet implemented${NC}"
@@ -135,14 +145,14 @@ PROJECT_NAME_PASCAL=$(echo "$PROJECT_NAME" | sed -E 's/(^|-)([a-z])/\U\2/g')
 CURRENT_DATE=$(date +%Y-%m-%d)
 
 # Find and replace in all markdown, json, and config files
-find "$PROJECT_NAME" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -exec sed -i "s|{{PROJECT_NAME}}|$PROJECT_NAME|g" {} \;
-find "$PROJECT_NAME" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -exec sed -i "s|{{PROJECT_NAME_PASCAL}}|$PROJECT_NAME_PASCAL|g" {} \;
-find "$PROJECT_NAME" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -exec sed -i "s|{{DATE}}|$CURRENT_DATE|g" {} \;
+find "$PROJECT_PATH" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -exec sed -i "s|{{PROJECT_NAME}}|$PROJECT_NAME|g" {} \;
+find "$PROJECT_PATH" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -exec sed -i "s|{{PROJECT_NAME_PASCAL}}|$PROJECT_NAME_PASCAL|g" {} \;
+find "$PROJECT_PATH" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -exec sed -i "s|{{DATE}}|$CURRENT_DATE|g" {} \;
 
 # Step 4: Initialize Git (if not already)
-if [ ! -d "$PROJECT_NAME/.git" ]; then
+if [ ! -d "$PROJECT_PATH/.git" ]; then
     echo -e "${YELLOW}🔗 Initializing Git repository...${NC}"
-    cd "$PROJECT_NAME"
+    cd "$PROJECT_PATH"
     git init -q
     git add .
     git commit -q -m "chore: initial project setup
@@ -161,7 +171,7 @@ fi
 
 # Step 5: Install dependencies (if applicable)
 echo -e "${YELLOW}📦 Installing dependencies...${NC}"
-cd "$PROJECT_NAME"
+cd "$PROJECT_PATH"
 
 case $PROJECT_TYPE in
     webapp|website|game-2d)
