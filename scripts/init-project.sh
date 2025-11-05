@@ -197,11 +197,18 @@ find "$PROJECT_PATH" -type f \( -name "*.md" -o -name "*.json" -o -name "*.ts" -
 echo "DEBUG: Replaced {{DATE}}" >&2
 
 # Step 4: Initialize Git (if not already)
+echo "DEBUG: Checking if .git exists at $PROJECT_PATH/.git" >&2
 if [ ! -d "$PROJECT_PATH/.git" ]; then
     echo -e "${YELLOW}🔗 Initializing Git repository...${NC}"
+    echo "DEBUG: cd to $PROJECT_PATH" >&2
     cd "$PROJECT_PATH"
+    echo "DEBUG: Running git init..." >&2
     git init -q
+    echo "DEBUG: Git init completed" >&2
+    echo "DEBUG: Running git add ." >&2
     git add .
+    echo "DEBUG: Git add completed" >&2
+    echo "DEBUG: Running git commit..." >&2
     git commit -q -m "chore: initial project setup
 
 Initialized $PROJECT_TYPE project with Claude Code Library boilerplate.
@@ -213,7 +220,11 @@ Includes:
 
 🤖 Generated with Claude Code Library v$VERSION
 "
+    echo "DEBUG: Git commit completed" >&2
     cd - > /dev/null
+    echo "DEBUG: Returned to previous directory" >&2
+else
+    echo "DEBUG: .git already exists, skipping git init" >&2
 fi
 
 # Step 5: Install dependencies (if applicable)
