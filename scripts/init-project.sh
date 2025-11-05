@@ -294,8 +294,11 @@ echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━
 echo "DEBUG: After second border" >&2
 echo ""
 echo "DEBUG: After final blank line" >&2
+echo "DEBUG: About to print Next steps" >&2
 echo -e "${BLUE}Next steps:${NC}"
+echo "DEBUG: Printed Next steps, about to print cd command" >&2
 echo -e "  1. ${YELLOW}cd $PROJECT_NAME${NC}"
+echo "DEBUG: Printed cd command" >&2
 echo -e "  2. ${YELLOW}Review .claude/CLAUDE.md${NC} and customize for your project"
 echo -e "  3. ${YELLOW}Run morning-setup.sh${NC} to load context (or it will run automatically on cd)"
 echo -e "  4. ${YELLOW}Start development!${NC}"
