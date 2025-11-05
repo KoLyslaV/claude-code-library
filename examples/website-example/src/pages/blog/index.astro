@@ -1,0 +1,58 @@
+---
+import { getCollection } from 'astro:content'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import Header from '@/components/Header.astro'
+import Footer from '@/components/Footer.astro'
+
+// Get all blog posts, sorted by publish date
+const posts = (await getCollection('blog'))
+  .filter((post) => !post.data.draft)
+  .sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf())
+---
+
+<BaseLayout title="Blog - {{PROJECT_NAME_PASCAL}}" description="Latest blog posts">
+  <Header />
+
+  <main class="container mx-auto px-4 py-16">
+    <h1 class="mb-12 text-4xl font-bold">Blog</h1>
+
+    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      {
+        posts.map((post) => (
+          <article class="rounded-lg border bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+            <a href={`/blog/${post.slug}`} class="block">
+              <h2 class="mb-2 text-xl font-semibold hover:text-blue-600">
+                {post.data.title}
+              </h2>
+              <time class="mb-3 block text-sm text-gray-500">
+                {post.data.publishDate.toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </time>
+              <p class="mb-4 text-gray-600">{post.data.description}</p>
+              {post.data.tags.length > 0 && (
+                <div class="flex flex-wrap gap-2">
+                  {post.data.tags.map((tag) => (
+                    <span class="rounded-full bg-blue-100 px-3 py-1 text-xs text-blue-700">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </a>
+          </article>
+        ))
+      }
+    </div>
+
+    {
+      posts.length === 0 && (
+        <p class="text-center text-gray-600">No blog posts yet. Check back soon!</p>
+      )
+    }
+  </main>
+
+  <Footer />
+</BaseLayout>

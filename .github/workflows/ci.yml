@@ -1,0 +1,158 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up environment
+        run: |
+          chmod +x tests/*.sh
+          chmod +x scripts/*.sh
+
+      - name: Run library structure tests
+        run: |
+          ./tests/test-library-structure.sh
+
+      - name: Run CLI tests
+        run: |
+          ./tests/test-claude-lib-cli.sh
+
+      - name: Run boilerplate integrity tests
+        run: |
+          ./tests/test-boilerplate-integrity.sh
+
+      - name: Run integration tests
+        run: |
+          ./tests/test-integration.sh
+
+      - name: Run all tests via test runner
+        run: |
+          ./tests/test-runner.sh
+
+  validate-boilerplates:
+    name: Validate Boilerplates
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        boilerplate: [webapp-boilerplate, website-boilerplate, python-cli-boilerplate]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Make scripts executable
+        run: |
+          chmod +x scripts/*.sh
+
+      - name: Validate ${{ matrix.boilerplate }}
+        run: |
+          ./scripts/validate-boilerplate.sh boilerplates/${{ matrix.boilerplate }}
+
+  check-examples:
+    name: Check Example Projects
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        example:
+          - name: webapp-example
+            type: webapp
+          - name: website-example
+            type: website
+          - name: python-cli-example
+            type: python-cli
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Make scripts executable
+        run: |
+          chmod +x scripts/*.sh
+
+      - name: Validate ${{ matrix.example.name }} structure
+        run: |
+          ./scripts/validate-project-structure.sh examples/${{ matrix.example.name }} ${{ matrix.example.type }}
+
+      - name: Check ${{ matrix.example.name }} documentation
+        run: |
+          if [ ! -f "examples/${{ matrix.example.name }}/README.md" ]; then
+            echo "ERROR: README.md missing in ${{ matrix.example.name }}"
+            exit 1
+          fi
+          echo "✓ README.md exists"
+
+  lint-shell:
+    name: Lint Shell Scripts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck on scripts
+        run: |
+          find scripts -name "*.sh" -exec shellcheck {} +
+
+      - name: Run ShellCheck on tests
+        run: |
+          find tests -name "*.sh" -exec shellcheck {} +
+        continue-on-error: true
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+        continue-on-error: true
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+        continue-on-error: true
+
+  status:
+    name: CI Status
+    runs-on: ubuntu-latest
+    needs: [test, validate-boilerplates, check-examples, lint-shell]
+    if: always()
+
+    steps:
+      - name: Check CI Status
+        run: |
+          if [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.validate-boilerplates.result }}" != "success" ] || \
+             [ "${{ needs.check-examples.result }}" != "success" ] || \
+             [ "${{ needs.lint-shell.result }}" != "success" ]; then
+            echo "❌ CI checks failed"
+            exit 1
+          fi
+          echo "✅ All CI checks passed"

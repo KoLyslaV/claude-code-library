@@ -1,0 +1,155 @@
+# Pre-commit hooks for Claude Code Library
+# Install: pre-commit install
+# Update: pre-commit autoupdate
+# Run manually: pre-commit run --all-files
+
+repos:
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+        exclude: '\.md$'
+      - id: end-of-file-fixer
+        name: Fix end of files
+      - id: check-yaml
+        name: Check YAML syntax
+      - id: check-json
+        name: Check JSON syntax
+      - id: check-toml
+        name: Check TOML syntax
+      - id: check-added-large-files
+        name: Check for large files
+        args: ['--maxkb=1000']
+      - id: check-case-conflict
+        name: Check for case conflicts
+      - id: check-merge-conflict
+        name: Check for merge conflicts
+      - id: check-executables-have-shebangs
+        name: Check executables have shebangs
+      - id: check-shebang-scripts-are-executable
+        name: Check shebang scripts are executable
+      - id: mixed-line-ending
+        name: Check line endings
+        args: ['--fix=lf']
+
+  # Shell script linting
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.6
+    hooks:
+      - id: shellcheck
+        name: Lint shell scripts
+        args: ['-x', '-e', 'SC1091']  # Exclude source file warnings
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.39.0
+    hooks:
+      - id: markdownlint
+        name: Lint Markdown files
+        args: ['--fix', '--disable', 'MD013', 'MD033']  # Disable line length and inline HTML warnings
+
+  # Custom local hooks
+  - repo: local
+    hooks:
+      # Run library structure tests
+      - id: test-library-structure
+        name: Test library structure
+        entry: ./tests/test-library-structure.sh
+        language: system
+        pass_filenames: false
+        files: '(boilerplates|examples|scripts|tests)/.*'
+        stages: [pre-commit]
+
+      # Validate boilerplate integrity
+      - id: validate-boilerplates
+        name: Validate boilerplate integrity
+        entry: ./tests/test-boilerplate-integrity.sh
+        language: system
+        pass_filenames: false
+        files: 'boilerplates/.*'
+        stages: [pre-commit]
+
+      # Run quick smoke tests (not full integration tests to keep commits fast)
+      - id: quick-tests
+        name: Run quick smoke tests
+        entry: bash -c 'chmod +x scripts/*.sh && chmod +x tests/*.sh && echo "✓ Scripts are executable"'
+        language: system
+        pass_filenames: false
+        files: '\.(sh|bash)$'
+        stages: [pre-commit]
+
+      # Validate changed examples
+      - id: validate-examples
+        name: Validate example project structures
+        entry: ./hooks/validate-changed-examples.sh
+        language: system
+        files: 'examples/.*'
+        stages: [pre-commit]
+
+      # Check for template variables
+      - id: check-template-variables
+        name: Check for unreplaced template variables
+        entry: bash -c 'if grep -r "{{PROJECT_NAME}}" examples/ --exclude-dir=node_modules 2>/dev/null; then echo "ERROR: Found unreplaced template variables in examples/"; exit 1; fi; echo "✓ No template variables in examples"'
+        language: system
+        pass_filenames: false
+        files: 'examples/.*'
+        stages: [pre-commit]
+
+      # Ensure READMEs exist
+      - id: check-readme-exists
+        name: Check README files exist
+        entry: bash -c 'for dir in boilerplates/*/ examples/*/; do if [ ! -f "${dir}README.md" ]; then echo "ERROR: Missing README.md in $dir"; exit 1; fi; done; echo "✓ All READMEs exist"'
+        language: system
+        pass_filenames: false
+        files: '(boilerplates|examples)/.*'
+        stages: [pre-commit]
+
+  # Python formatting and linting (for Python examples)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.0
+    hooks:
+      - id: ruff
+        name: Lint Python with ruff
+        args: ['--fix']
+        files: '\.py$'
+      - id: ruff-format
+        name: Format Python with ruff
+        files: '\.py$'
+
+  # Python type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        name: Type check Python
+        files: 'examples/python-cli-example/.*\.py$'
+        args: ['--ignore-missing-imports']
+        additional_dependencies: ['types-all']
+
+  # TypeScript/JavaScript linting (for Node.js examples)
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v9.0.0
+    hooks:
+      - id: eslint
+        name: Lint TypeScript/JavaScript
+        files: '\.(ts|tsx|js|jsx)$'
+        args: ['--fix']
+        additional_dependencies:
+          - eslint@8.56.0
+          - '@typescript-eslint/eslint-plugin@6.19.0'
+          - '@typescript-eslint/parser@6.19.0'
+
+  # Prettier formatting (for Node.js examples)
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        name: Format with Prettier
+        files: '\.(ts|tsx|js|jsx|json|css|scss|md)$'
+        args: ['--write']
+
+# Configuration
+default_stages: [pre-commit]
+fail_fast: false

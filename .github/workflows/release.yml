@@ -1,0 +1,105 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get previous tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -z "$PREVIOUS_TAG" ]; then
+            # First release, get all commits
+            CHANGES=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            # Get commits since previous tag
+            CHANGES=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
+
+          # Save to file for multiline output
+          echo "$CHANGES" > CHANGELOG.txt
+
+          # Create release notes
+          cat > RELEASE_NOTES.md << EOF
+          # Claude Code Library ${{ steps.get_version.outputs.tag }}
+
+          ## What's Changed
+
+          $CHANGES
+
+          ## Boilerplates Included
+
+          - **webapp-boilerplate** - Next.js 15 + React 19 + Server Actions + Prisma + NextAuth
+          - **website-boilerplate** - Astro 5.0 + Content Collections + MDX + Static Site Generation
+          - **python-cli-boilerplate** - Click + Poetry + Rich + Pytest + Type Hints
+
+          ## Examples Included
+
+          - **webapp-example** - Task Manager demonstrating Server Actions and NextAuth
+          - **website-example** - Tech Blog demonstrating Content Collections and MDX
+          - **python-cli-example** - Todo CLI demonstrating Click and Rich
+
+          ## Installation
+
+          \`\`\`bash
+          # Clone the repository
+          git clone https://github.com/YOUR_USERNAME/claude-code-library.git
+          cd claude-code-library
+
+          # Make scripts executable
+          chmod +x scripts/*.sh
+
+          # Initialize a new project
+          ./scripts/init-project.sh [webapp|website|python-cli] /path/to/project "Project Name"
+          \`\`\`
+
+          ## Documentation
+
+          See [README.md](https://github.com/YOUR_USERNAME/claude-code-library/blob/main/README.md) for full documentation.
+
+          ---
+
+          **Full Changelog**: https://github.com/YOUR_USERNAME/claude-code-library/compare/${PREVIOUS_TAG}...${{ steps.get_version.outputs.tag }}
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ steps.get_version.outputs.tag }}
+          body_path: RELEASE_NOTES.md
+          draft: false
+          prerelease: false
+          files: |
+            README.md
+            LICENSE
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Post-release notification
+        run: |
+          echo "✅ Release ${{ steps.get_version.outputs.tag }} created successfully"
+          echo "📦 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ steps.get_version.outputs.tag }}"

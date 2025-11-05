@@ -1,0 +1,612 @@
+#!/bin/bash
+# claude-lib - Unified CLI for Claude Code Library
+# Usage: claude-lib <command> [options]
+# Central interface for all library functionality
+
+set -e
+
+VERSION="1.0.0"
+LIBRARY_ROOT="$HOME/.claude-library"
+SCRIPTS_DIR="$LIBRARY_ROOT/scripts"
+BOILERPLATES_DIR="$LIBRARY_ROOT/boilerplates"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+MAGENTA='\033[0;35m'
+NC='\033[0m' # No Color
+
+# Helper functions
+error() {
+    echo -e "${RED}❌ Error: $1${NC}" >&2
+}
+
+success() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+info() {
+    echo -e "${BLUE}ℹ️  $1${NC}"
+}
+
+warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+# Usage information
+usage() {
+    cat << EOF
+${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}
+${CYAN}  Claude Code Library - Unified CLI${NC}
+${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}
+
+Version: $VERSION
+
+${YELLOW}USAGE:${NC}
+  claude-lib <command> [options]
+
+${YELLOW}PROJECT COMMANDS:${NC}
+  init <name> <type>       Initialize new project from boilerplate
+                           Types: webapp, website, python-cli
+  morning                  Run morning setup for current project
+  validate                 Validate project structure
+
+${YELLOW}WORKFLOW COMMANDS:${NC}
+  feature <name>           Start feature development workflow
+  bug-hunt                 Run bug hunting and detection
+  docs [--quick|--full]    Generate/update documentation
+  crisis [description]     Emergency debugging mode
+
+${YELLOW}QUALITY COMMANDS:${NC}
+  check                    Run all quality checks
+  anti-patterns            Detect anti-patterns
+  fix                      Auto-fix common issues
+
+${YELLOW}INFO COMMANDS:${NC}
+  list                     List available boilerplates and scripts
+  version                  Show version information
+  help [command]           Show help for specific command
+  doctor                   Check library installation health
+
+${YELLOW}EXAMPLES:${NC}
+  claude-lib init my-app webapp
+  claude-lib morning
+  claude-lib feature user-auth
+  claude-lib bug-hunt --fix
+  claude-lib docs --quick
+  claude-lib crisis "Server error 500"
+
+${YELLOW}OPTIONS:${NC}
+  --help                   Show this help message
+  --version                Show version
+  --verbose                Verbose output
+
+${CYAN}💡 Tip: Run 'claude-lib help <command>' for detailed command help${NC}
+
+EOF
+    exit 0
+}
+
+# Version information
+show_version() {
+    echo "claude-lib version $VERSION"
+    echo "Claude Code Library"
+    echo ""
+    echo "Installation: $LIBRARY_ROOT"
+    exit 0
+}
+
+# Doctor - check installation health
+doctor() {
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${CYAN}🏥 Claude Code Library Health Check${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+
+    ERRORS=0
+
+    # Check library directory
+    if [ -d "$LIBRARY_ROOT" ]; then
+        success "Library directory exists: $LIBRARY_ROOT"
+    else
+        error "Library directory not found: $LIBRARY_ROOT"
+        ((ERRORS++))
+    fi
+
+    # Check scripts directory
+    if [ -d "$SCRIPTS_DIR" ]; then
+        success "Scripts directory exists"
+
+        # Check individual scripts
+        SCRIPTS=(
+            "init-project.sh"
+            "morning-setup.sh"
+            "validate-structure.sh"
+            "anti-pattern-detector.sh"
+            "feature-workflow.sh"
+            "bug-hunter.sh"
+            "doc-sprint.sh"
+            "crisis-mode.sh"
+        )
+
+        for script in "${SCRIPTS[@]}"; do
+            if [ -f "$SCRIPTS_DIR/$script" ] && [ -x "$SCRIPTS_DIR/$script" ]; then
+                success "  $script"
+            else
+                error "  $script (missing or not executable)"
+                ((ERRORS++))
+            fi
+        done
+    else
+        error "Scripts directory not found"
+        ((ERRORS++))
+    fi
+
+    # Check boilerplates directory
+    if [ -d "$BOILERPLATES_DIR" ]; then
+        success "Boilerplates directory exists"
+
+        # Check individual boilerplates
+        BOILERPLATES=(
+            "webapp-boilerplate"
+            "website-boilerplate"
+            "python-cli-boilerplate"
+        )
+
+        for boilerplate in "${BOILERPLATES[@]}"; do
+            if [ -d "$BOILERPLATES_DIR/$boilerplate" ]; then
+                success "  $boilerplate"
+            else
+                error "  $boilerplate (missing)"
+                ((ERRORS++))
+            fi
+        done
+    else
+        error "Boilerplates directory not found"
+        ((ERRORS++))
+    fi
+
+    # Check modern CLI tools
+    echo ""
+    info "Checking modern CLI tools..."
+
+    TOOLS=(
+        "fd:File search"
+        "rg:Content search (ripgrep)"
+        "eza:Enhanced ls"
+        "bat:Syntax highlighting"
+        "z:Directory jumping (zoxide)"
+        "fzf:Fuzzy finder"
+    )
+
+    for tool_info in "${TOOLS[@]}"; do
+        IFS=':' read -r tool desc <<< "$tool_info"
+        if command -v "$tool" &> /dev/null; then
+            success "  $desc ($tool)"
+        else
+            warning "  $desc ($tool) - not installed but optional"
+        fi
+    done
+
+    # Check Node.js/npm for webapp/website projects
+    echo ""
+    info "Checking development tools..."
+
+    if command -v node &> /dev/null; then
+        NODE_VERSION=$(node --version)
+        success "  Node.js: $NODE_VERSION"
+    else
+        warning "  Node.js not found (needed for webapp/website)"
+    fi
+
+    if command -v npm &> /dev/null; then
+        NPM_VERSION=$(npm --version)
+        success "  npm: $NPM_VERSION"
+    else
+        warning "  npm not found (needed for webapp/website)"
+    fi
+
+    # Check Python/Poetry for python-cli projects
+    if command -v python &> /dev/null || command -v python3 &> /dev/null; then
+        PYTHON_VERSION=$(python3 --version 2>&1 || python --version 2>&1)
+        success "  Python: $PYTHON_VERSION"
+    else
+        warning "  Python not found (needed for python-cli)"
+    fi
+
+    if command -v poetry &> /dev/null; then
+        POETRY_VERSION=$(poetry --version)
+        success "  Poetry: $POETRY_VERSION"
+    else
+        warning "  Poetry not found (recommended for python-cli)"
+    fi
+
+    # Check git
+    if command -v git &> /dev/null; then
+        GIT_VERSION=$(git --version)
+        success "  Git: $GIT_VERSION"
+    else
+        error "  Git not found (required)"
+        ((ERRORS++))
+    fi
+
+    echo ""
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+    if [ $ERRORS -eq 0 ]; then
+        echo -e "${GREEN}✨ All checks passed! Library is healthy.${NC}"
+        exit 0
+    else
+        echo -e "${RED}❌ Found $ERRORS error(s). Please fix before using library.${NC}"
+        exit 1
+    fi
+}
+
+# List available boilerplates and scripts
+list_resources() {
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${CYAN}📦 Claude Code Library Resources${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+
+    echo -e "${YELLOW}📁 BOILERPLATES:${NC}"
+    echo ""
+    echo -e "  ${GREEN}webapp${NC}"
+    echo -e "    Next.js 15 + React 19 + TypeScript"
+    echo -e "    Full-stack web applications, dashboards, SaaS"
+    echo ""
+    echo -e "  ${GREEN}website${NC}"
+    echo -e "    Astro 5.0 + TypeScript + MDX"
+    echo -e "    Static sites, blogs, documentation, portfolios"
+    echo ""
+    echo -e "  ${GREEN}python-cli${NC}"
+    echo -e "    Python 3.11+ + Click + Poetry + pytest"
+    echo -e "    Command-line tools and automation scripts"
+    echo ""
+
+    echo -e "${YELLOW}🛠️  AUTOMATION SCRIPTS:${NC}"
+    echo ""
+    echo -e "  ${GREEN}init-project.sh${NC}      - Initialize new project"
+    echo -e "  ${GREEN}morning-setup.sh${NC}     - Load session context"
+    echo -e "  ${GREEN}validate-structure.sh${NC} - Validate project structure"
+    echo -e "  ${GREEN}anti-pattern-detector.sh${NC} - Detect code anti-patterns"
+    echo -e "  ${GREEN}feature-workflow.sh${NC}  - Feature development workflow"
+    echo -e "  ${GREEN}bug-hunter.sh${NC}        - Bug detection and fixing"
+    echo -e "  ${GREEN}doc-sprint.sh${NC}        - Rapid documentation generation"
+    echo -e "  ${GREEN}crisis-mode.sh${NC}       - Emergency debugging"
+    echo ""
+
+    echo -e "${CYAN}💡 Use 'claude-lib help <command>' for detailed help${NC}"
+    echo ""
+}
+
+# Command-specific help
+command_help() {
+    local cmd=$1
+
+    case $cmd in
+        init)
+            cat << EOF
+${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}
+${YELLOW}claude-lib init${NC} - Initialize new project
+${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}
+
+${YELLOW}USAGE:${NC}
+  claude-lib init <project-name> <boilerplate-type>
+
+${YELLOW}BOILERPLATE TYPES:${NC}
+  webapp       - Next.js 15 + React 19 (full-stack web apps)
+  website      - Astro 5.0 (static sites, blogs)
+  python-cli   - Python CLI tool (Click + Poetry)
+
+${YELLOW}EXAMPLES:${NC}
+  claude-lib init my-app webapp
+  claude-lib init blog website
+  claude-lib init my-tool python-cli
+
+${YELLOW}WHAT IT DOES:${NC}
+  1. Copies boilerplate to new directory
+  2. Replaces template variables
+  3. Initializes git repository
+  4. Creates initial commit
+  5. Opens in editor (optional)
+
+${CYAN}⏱️  Time saved: 10-15 minutes per project${NC}
+EOF
+            ;;
+        morning)
+            cat << EOF
+${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}
+${YELLOW}claude-lib morning${NC} - Morning setup
+${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}
+
+${YELLOW}USAGE:${NC}
+  claude-lib morning
+
+${YELLOW}WHAT IT DOES:${NC}
+  1. Shows project structure summary
+  2. Displays recent git commits
+  3. Shows TODO.md priorities
+  4. Lists recent file changes
+  5. Displays HANDOFF.md notes
+  6. Runs validation checks
+
+${YELLOW}RUN THIS:${NC}
+  - Start of every work session
+  - After pulling changes
+  - Before starting new features
+
+${CYAN}⏱️  Time saved: 5-10 minutes understanding project state${NC}
+EOF
+            ;;
+        feature)
+            cat << EOF
+${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}
+${YELLOW}claude-lib feature${NC} - Feature development workflow
+${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}
+
+${YELLOW}USAGE:${NC}
+  claude-lib feature <feature-name> [options]
+
+${YELLOW}OPTIONS:${NC}
+  --skip-branch    Skip branch creation
+  --skip-tests     Skip test generation
+
+${YELLOW}EXAMPLES:${NC}
+  claude-lib feature user-authentication
+  claude-lib feature dark-mode --skip-tests
+
+${YELLOW}WORKFLOW (6 phases):${NC}
+  1. Setup: Create branch, add to TODO
+  2. Discovery: Run fd/rg/Serena search
+  3. Implementation: L0-L2 checklist
+  4. Testing: Run test suite
+  5. Validation: Structure + anti-patterns
+  6. Commit: Conventional commit format
+
+${CYAN}⏱️  Time saved: 30-60 minutes per feature${NC}
+EOF
+            ;;
+        bug-hunt)
+            cat << EOF
+${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}
+${YELLOW}claude-lib bug-hunt${NC} - Bug hunting and detection
+${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}
+
+${YELLOW}USAGE:${NC}
+  claude-lib bug-hunt [options]
+
+${YELLOW}OPTIONS:${NC}
+  --quick      Quick scan (skip heavy checks)
+  --fix        Auto-fix common issues
+  --report     Generate bug report
+
+${YELLOW}EXAMPLES:${NC}
+  claude-lib bug-hunt --quick
+  claude-lib bug-hunt --fix --report
+
+${YELLOW}WHAT IT CHECKS:${NC}
+  - Static analysis (TypeScript, ESLint, mypy, ruff)
+  - Anti-patterns (P0-P3 severity)
+  - Runtime errors (console.error/warn)
+  - Test failures
+  - TODO/FIXME comments
+
+${CYAN}⏱️  Time saved: 1-2 hours of manual debugging${NC}
+EOF
+            ;;
+        docs)
+            cat << EOF
+${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}
+${YELLOW}claude-lib docs${NC} - Documentation generation
+${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}
+
+${YELLOW}USAGE:${NC}
+  claude-lib docs [--quick|--full]
+
+${YELLOW}OPTIONS:${NC}
+  --quick      Update HANDOFF + TODO only
+  --full       Generate all documentation
+
+${YELLOW}EXAMPLES:${NC}
+  claude-lib docs --quick
+  claude-lib docs --full
+
+${YELLOW}GENERATES:${NC}
+  - HANDOFF.md (session notes)
+  - TODO.md (priority tracking)
+  - CODE_PATTERNS.md (--full)
+  - ARCHITECTURE.md (--full)
+  - API.md (--full, if API routes found)
+
+${CYAN}⏱️  Time saved: 90% faster vs manual documentation${NC}
+EOF
+            ;;
+        crisis)
+            cat << EOF
+${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}
+${YELLOW}claude-lib crisis${NC} - Emergency debugging
+${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}
+
+${YELLOW}USAGE:${NC}
+  claude-lib crisis [description] [options]
+
+${YELLOW}OPTIONS:${NC}
+  --auto-fix      Attempt automatic fixes
+  --save-state    Save to BUGS_FIXED.md
+
+${YELLOW}EXAMPLES:${NC}
+  claude-lib crisis "Server 500 error"
+  claude-lib crisis --save-state
+
+${YELLOW}WORKFLOW (5 phases):${NC}
+  1. Capture system state
+  2. Emergency diagnostics
+  3. Interactive debugging checklist
+  4. Rollback options
+  5. Solution documentation
+
+${CYAN}⏱️  Critical - saves hours during incidents${NC}
+EOF
+            ;;
+        check)
+            cat << EOF
+${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}
+${YELLOW}claude-lib check${NC} - Run all quality checks
+${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}
+
+${YELLOW}USAGE:${NC}
+  claude-lib check
+
+${YELLOW}WHAT IT RUNS:${NC}
+  1. validate-structure.sh
+  2. anti-pattern-detector.sh
+  3. bug-hunter.sh --quick
+
+${YELLOW}RUN THIS:${NC}
+  - Before committing code
+  - After pulling changes
+  - Before creating PR
+
+${CYAN}⏱️  Time saved: Catches 90% of issues before CI${NC}
+EOF
+            ;;
+        *)
+            error "Unknown command: $cmd"
+            echo ""
+            info "Available commands: init, morning, feature, bug-hunt, docs, crisis, check"
+            info "Run 'claude-lib help' for full help"
+            exit 1
+            ;;
+    esac
+}
+
+# Main command routing
+main() {
+    # Check if no arguments
+    if [ $# -eq 0 ]; then
+        usage
+    fi
+
+    # Parse global flags
+    case $1 in
+        --help|-h)
+            usage
+            ;;
+        --version|-v)
+            show_version
+            ;;
+    esac
+
+    # Get command
+    COMMAND=$1
+    shift
+
+    # Route to appropriate handler
+    case $COMMAND in
+        init)
+            if [ $# -lt 2 ]; then
+                error "Missing arguments for init command"
+                echo ""
+                info "Usage: claude-lib init <project-name> <boilerplate-type>"
+                info "Run 'claude-lib help init' for more info"
+                exit 1
+            fi
+            "$SCRIPTS_DIR/init-project.sh" "$@"
+            ;;
+
+        morning)
+            "$SCRIPTS_DIR/morning-setup.sh" "$@"
+            ;;
+
+        validate)
+            "$SCRIPTS_DIR/validate-structure.sh" "$@"
+            ;;
+
+        feature)
+            if [ $# -lt 1 ]; then
+                error "Missing feature name"
+                echo ""
+                info "Usage: claude-lib feature <feature-name>"
+                info "Run 'claude-lib help feature' for more info"
+                exit 1
+            fi
+            "$SCRIPTS_DIR/feature-workflow.sh" "$@"
+            ;;
+
+        bug-hunt)
+            "$SCRIPTS_DIR/bug-hunter.sh" "$@"
+            ;;
+
+        docs)
+            "$SCRIPTS_DIR/doc-sprint.sh" "$@"
+            ;;
+
+        crisis)
+            "$SCRIPTS_DIR/crisis-mode.sh" "$@"
+            ;;
+
+        check)
+            echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+            echo -e "${CYAN}🔍 Running Quality Checks${NC}"
+            echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+            echo ""
+
+            info "1/3: Structure validation..."
+            "$SCRIPTS_DIR/validate-structure.sh"
+            echo ""
+
+            info "2/3: Anti-pattern detection..."
+            "$SCRIPTS_DIR/anti-pattern-detector.sh"
+            echo ""
+
+            info "3/3: Bug hunting..."
+            "$SCRIPTS_DIR/bug-hunter.sh" --quick
+            echo ""
+
+            success "All quality checks complete!"
+            ;;
+
+        anti-patterns)
+            "$SCRIPTS_DIR/anti-pattern-detector.sh" "$@"
+            ;;
+
+        fix)
+            info "Running auto-fix..."
+            "$SCRIPTS_DIR/bug-hunter.sh" --fix
+            ;;
+
+        list)
+            list_resources
+            ;;
+
+        version)
+            show_version
+            ;;
+
+        doctor)
+            doctor
+            ;;
+
+        help)
+            if [ $# -eq 0 ]; then
+                usage
+            else
+                command_help "$1"
+            fi
+            ;;
+
+        *)
+            error "Unknown command: $COMMAND"
+            echo ""
+            info "Run 'claude-lib help' for available commands"
+            exit 1
+            ;;
+    esac
+}
+
+# Run main function
+main "$@"

@@ -1,0 +1,55 @@
+---
+const currentYear = new Date().getFullYear()
+---
+
+<footer class="border-t bg-gray-50 py-12 mt-24">
+  <div class="container mx-auto px-4">
+    <div class="grid gap-8 md:grid-cols-3">
+      <!-- About -->
+      <div>
+        <h3 class="mb-4 text-lg font-semibold">{{PROJECT_NAME_PASCAL}}</h3>
+        <p class="text-gray-600">
+          A modern static site built with Astro 5.0. Fast, accessible, and
+          SEO-friendly.
+        </p>
+      </div>
+
+      <!-- Links -->
+      <div>
+        <h3 class="mb-4 text-lg font-semibold">Quick Links</h3>
+        <ul class="space-y-2">
+          <li>
+            <a href="/blog" class="text-gray-600 hover:text-blue-600">Blog</a>
+          </li>
+          <li>
+            <a href="/docs" class="text-gray-600 hover:text-blue-600">Docs</a>
+          </li>
+          <li>
+            <a href="/about" class="text-gray-600 hover:text-blue-600">About</a
+            >
+          </li>
+        </ul>
+      </div>
+
+      <!-- Social -->
+      <div>
+        <h3 class="mb-4 text-lg font-semibold">Connect</h3>
+        <ul class="space-y-2">
+          <li>
+            <a href="#" class="text-gray-600 hover:text-blue-600">GitHub</a>
+          </li>
+          <li>
+            <a href="#" class="text-gray-600 hover:text-blue-600">Twitter</a>
+          </li>
+          <li>
+            <a href="#" class="text-gray-600 hover:text-blue-600">LinkedIn</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-8 border-t pt-8 text-center text-sm text-gray-600">
+      <p>© {currentYear} {{PROJECT_NAME_PASCAL}}. Built with Astro 5.0.</p>
+    </div>
+  </div>
+</footer>

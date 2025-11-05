@@ -1,0 +1,205 @@
+name: Maintenance
+
+on:
+  schedule:
+    # Run weekly on Mondays at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  check-dependencies:
+    name: Check Dependencies
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        project:
+          - path: examples/webapp-example
+            type: npm
+          - path: examples/website-example
+            type: npm
+          - path: examples/python-cli-example
+            type: poetry
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js (npm projects)
+        if: matrix.project.type == 'npm'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Python (poetry projects)
+        if: matrix.project.type == 'poetry'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Poetry
+        if: matrix.project.type == 'poetry'
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Check npm outdated
+        if: matrix.project.type == 'npm'
+        working-directory: ${{ matrix.project.path }}
+        run: |
+          npm outdated || true
+        continue-on-error: true
+
+      - name: Check npm audit
+        if: matrix.project.type == 'npm'
+        working-directory: ${{ matrix.project.path }}
+        run: |
+          npm audit || true
+        continue-on-error: true
+
+      - name: Check poetry outdated
+        if: matrix.project.type == 'poetry'
+        working-directory: ${{ matrix.project.path }}
+        run: |
+          poetry show --outdated || true
+        continue-on-error: true
+
+  check-links:
+    name: Check Documentation Links
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install markdown-link-check
+        run: npm install -g markdown-link-check
+
+      - name: Check README links
+        run: |
+          find . -name "README.md" -exec markdown-link-check {} \;
+        continue-on-error: true
+
+      - name: Check IMPLEMENTATION links
+        run: |
+          find . -name "IMPLEMENTATION.md" -exec markdown-link-check {} \;
+        continue-on-error: true
+
+  validate-structure:
+    name: Validate Repository Structure
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Make scripts executable
+        run: |
+          chmod +x tests/*.sh scripts/*.sh
+
+      - name: Check boilerplates
+        run: |
+          for boilerplate in boilerplates/*/; do
+            echo "Checking $boilerplate"
+            if [ ! -f "${boilerplate}README.md" ]; then
+              echo "⚠️  Missing README.md in $boilerplate"
+            fi
+            if [ ! -f "${boilerplate}package.json" ] && [ ! -f "${boilerplate}pyproject.toml" ]; then
+              echo "⚠️  Missing package.json or pyproject.toml in $boilerplate"
+            fi
+          done
+
+      - name: Check examples
+        run: |
+          for example in examples/*/; do
+            echo "Checking $example"
+            if [ ! -f "${example}README.md" ]; then
+              echo "⚠️  Missing README.md in $example"
+            fi
+          done
+
+      - name: Check scripts
+        run: |
+          for script in scripts/*.sh; do
+            if [ ! -x "$script" ]; then
+              echo "⚠️  Script not executable: $script"
+            fi
+          done
+
+      - name: Check tests
+        run: |
+          for test in tests/test-*.sh; do
+            if [ ! -x "$test" ]; then
+              echo "⚠️  Test not executable: $test"
+            fi
+          done
+
+  check-file-sizes:
+    name: Check File Sizes
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Find large files
+        run: |
+          echo "Files larger than 1MB:"
+          find . -type f -size +1M -not -path "./.git/*" -not -path "*/node_modules/*" -exec ls -lh {} \; || true
+
+      - name: Check total repository size
+        run: |
+          TOTAL_SIZE=$(du -sh . | cut -f1)
+          echo "Total repository size: $TOTAL_SIZE"
+
+  generate-stats:
+    name: Generate Repository Stats
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Count files by type
+        run: |
+          echo "=== Repository Statistics ==="
+          echo ""
+          echo "Boilerplates:"
+          ls -1 boilerplates/ | wc -l
+
+          echo ""
+          echo "Examples:"
+          ls -1 examples/ | wc -l
+
+          echo ""
+          echo "Scripts:"
+          ls -1 scripts/*.sh | wc -l
+
+          echo ""
+          echo "Tests:"
+          ls -1 tests/test-*.sh | wc -l
+
+          echo ""
+          echo "Lines of code by language:"
+          echo "Shell scripts:"
+          find scripts tests -name "*.sh" -exec wc -l {} + | tail -1 || echo "0"
+
+          echo ""
+          echo "TypeScript files:"
+          find boilerplates examples -name "*.ts" -o -name "*.tsx" | xargs wc -l 2>/dev/null | tail -1 || echo "0"
+
+          echo ""
+          echo "Python files:"
+          find boilerplates examples -name "*.py" | xargs wc -l 2>/dev/null | tail -1 || echo "0"
+
+  status:
+    name: Maintenance Status
+    runs-on: ubuntu-latest
+    needs: [check-dependencies, validate-structure, check-file-sizes, generate-stats]
+    if: always()
+
+    steps:
+      - name: Check Maintenance Status
+        run: |
+          echo "📊 Maintenance checks completed"
+          echo "Check individual job results for details"
