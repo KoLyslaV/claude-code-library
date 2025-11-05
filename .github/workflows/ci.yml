@@ -19,6 +19,8 @@ jobs:
         run: |
           chmod +x tests/*.sh
           chmod +x scripts/*.sh
+          git config --global user.email "ci@claude-code-library.test"
+          git config --global user.name "Claude Code Library CI"
 
       - name: Run library structure tests
         run: |

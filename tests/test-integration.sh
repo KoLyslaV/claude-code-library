@@ -66,11 +66,7 @@ WEBAPP_TEST_DIR="$TEST_TEMP_DIR/test-webapp-init"
 mkdir -p "$WEBAPP_TEST_DIR"
 
 # Initialize a webapp project
-echo "DEBUG: About to run init-project.sh"
-echo "DEBUG: WEBAPP_TEST_DIR=$WEBAPP_TEST_DIR"
-echo "DEBUG: Full path: $WEBAPP_TEST_DIR/my-webapp"
-if "$LIBRARY_ROOT/scripts/init-project.sh" webapp "$WEBAPP_TEST_DIR/my-webapp" "Test Webapp"; then
-    echo "DEBUG: init-project.sh succeeded"
+if "$LIBRARY_ROOT/scripts/init-project.sh" webapp "$WEBAPP_TEST_DIR/my-webapp" "Test Webapp" >/dev/null 2>&1; then
     # Validate the created project using validation script
     if "$LIBRARY_ROOT/scripts/validate-project-structure.sh" "$WEBAPP_TEST_DIR/my-webapp" webapp >/dev/null 2>&1; then
         pass "Initialized webapp passes structure validation"
@@ -78,7 +74,6 @@ if "$LIBRARY_ROOT/scripts/init-project.sh" webapp "$WEBAPP_TEST_DIR/my-webapp" "
         fail "Initialized webapp fails structure validation"
     fi
 else
-    echo "DEBUG: init-project.sh failed with exit code $?"
     fail "Failed to initialize webapp project"
 fi
 
