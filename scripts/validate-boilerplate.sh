@@ -47,8 +47,7 @@ case "$BOILERPLATE_NAME" in
         WEBAPP_FILES=(
             "package.json"
             "tsconfig.json"
-            ".eslintrc.json"
-            "next.config.mjs"
+            "next.config.ts"
             "prisma/schema.prisma"
         )
         for file in "${WEBAPP_FILES[@]}"; do

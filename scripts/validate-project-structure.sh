@@ -46,8 +46,7 @@ case "$PROJECT_TYPE" in
         WEBAPP_FILES=(
             "package.json"
             "tsconfig.json"
-            ".eslintrc.json"
-            "next.config.mjs"
+            "next.config.ts"
             "src/app/page.tsx"
         )
         for file in "${WEBAPP_FILES[@]}"; do
