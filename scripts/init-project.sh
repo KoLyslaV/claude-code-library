@@ -266,13 +266,21 @@ else
     cd - > /dev/null
 fi
 
+echo "DEBUG: Dependency section completed" >&2
+
 # Step 6: Run initial validation (if validate-structure.sh exists)
+echo "DEBUG: Checking for validate-structure.sh at $SCRIPT_DIR/validate-structure.sh" >&2
 if [ -f "$SCRIPT_DIR/validate-structure.sh" ]; then
+    echo "DEBUG: validate-structure.sh found, running validation..." >&2
     echo -e "${YELLOW}✅ Validating structure...${NC}"
     "$SCRIPT_DIR/validate-structure.sh" "$PROJECT_PATH" || true
+    echo "DEBUG: Validation completed (or true fallback)" >&2
 else
+    echo "DEBUG: validate-structure.sh not found" >&2
     echo -e "${YELLOW}⚠️  validate-structure.sh not found, skipping validation${NC}"
 fi
+
+echo "DEBUG: Validation section completed" >&2
 
 # Success!
 echo ""
