@@ -190,7 +190,6 @@ Includes:
 🤖 Generated with Claude Code Library v$VERSION
 "
     cd - > /dev/null
-else
 fi
 
 
