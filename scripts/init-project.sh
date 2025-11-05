@@ -302,7 +302,9 @@ echo "DEBUG: Printed cd command" >&2
 echo "DEBUG: About to print step 2" >&2
 echo -e "  2. ${YELLOW}Review .claude/CLAUDE.md${NC} and customize for your project"
 echo "DEBUG: Printed step 2" >&2
+echo "DEBUG: About to print step 3" >&2
 echo -e "  3. ${YELLOW}Run morning-setup.sh${NC} to load context (or it will run automatically on cd)"
+echo "DEBUG: Printed step 3" >&2
 echo -e "  4. ${YELLOW}Start development!${NC}"
 echo ""
 echo -e "${BLUE}Quick commands:${NC}"
