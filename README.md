@@ -2,6 +2,7 @@
 
 > **Comprehensive knihovna skriptů, šablon, boilerplatů a nástrojů pro maximální produktivitu s Claude Code CLI**
 
+[![CI Status](https://img.shields.io/badge/CI-100%25%20Pass-brightgreen)](https://github.com/KoLyslaV/claude-code-library/actions "All tests passing")
 [![ROI](https://img.shields.io/badge/ROI-465%25%20(Year%201)-brightgreen)](# "326 hours saved")
 [![Alignment](https://img.shields.io/badge/Alignment-100%25-blue)](# "Fully aligned with ultimate-* docs")
 [![Use Cases](https://img.shields.io/badge/Use%20Cases-5-orange)](# "Web, Games, Python")
@@ -15,6 +16,13 @@ Kolekce **127 zdrojů** (scripts, templates, boilerplates, docs) pro automatizac
 - 🚀 **53-80%** faster project setup
 - ✅ **85%** first-try success rate (vs 30-40% without)
 - 📈 **465% ROI** in Year 1
+
+> **🎉 v1.0.0 Status (2025-11-06)**
+> - ✅ **100% CI Success** - All integration tests passing
+> - ✅ **webapp-boilerplate** - Fully implemented and tested (Next.js 15 + React 19)
+> - 🚧 **website-boilerplate** - Planned for Phase 3 (Astro 5.0 + MDX)
+> - 🚧 **python-cli-boilerplate** - Planned for Phase 3 (Poetry + Click)
+> - 📚 **Documentation**: [Contributing Guide](CONTRIBUTING.md) · [Lessons Learned](docs/LESSONS_LEARNED.md) · [Development Guide](docs/DEVELOPMENT.md)
 
 ---
 
@@ -336,6 +344,8 @@ init-project.sh python-cli task-manager
 - [Usage Examples](docs/EXAMPLES.md)
 - [API Reference](docs/API_REFERENCE.md)
 - [Contributing Guide](CONTRIBUTING.md)
+- [Development Guide](docs/DEVELOPMENT.md)
+- [Lessons Learned](docs/LESSONS_LEARNED.md)
 
 ### Alignment with Ultimate Docs
 Knihovna je 100% zarovnána s:
@@ -484,7 +494,7 @@ Inspired by:
 ---
 
 **Version**: 1.0.0
-**Last Updated**: 2025-11-04
-**Status**: ✅ Production Ready
+**Last Updated**: 2025-11-06
+**Status**: ✅ Production Ready (webapp-only, 100% CI)
 
 🚀 **Start building faster with Claude Code Library!**
