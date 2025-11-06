@@ -28,12 +28,12 @@ print_section() {
 }
 
 pass() {
-    ((TESTS_PASSED++))
+    ((TESTS_PASSED++)) || :
     echo -e "${GREEN}✓ PASS${NC}: $1"
 }
 
 fail() {
-    ((TESTS_FAILED++))
+    ((TESTS_FAILED++)) || :
     echo -e "${RED}✗ FAIL${NC}: $1"
 }
 
@@ -65,16 +65,58 @@ print_section "Testing init-project.sh creates valid webapp structure"
 WEBAPP_TEST_DIR="$TEST_TEMP_DIR/test-webapp-init"
 mkdir -p "$WEBAPP_TEST_DIR"
 
+# Create temporary files for capturing stderr
+INIT_STDERR="$TEST_TEMP_DIR/init-stderr.txt"
+VALIDATE_STDERR="$TEST_TEMP_DIR/validate-stderr.txt"
+
 # Initialize a webapp project (skip deps for faster CI testing)
-if "$LIBRARY_ROOT/scripts/init-project.sh" --skip-deps webapp "$WEBAPP_TEST_DIR/my-webapp" "Test Webapp" >/dev/null; then
-    # Validate the created project using validation script
-    if "$LIBRARY_ROOT/scripts/validate-project-structure.sh" "$WEBAPP_TEST_DIR/my-webapp" webapp >/dev/null 2>&1; then
-        pass "Initialized webapp passes structure validation"
-    else
-        fail "Initialized webapp fails structure validation"
-    fi
+echo "  → Running init-project.sh for webapp..." >&2
+"$LIBRARY_ROOT/scripts/init-project.sh" --skip-deps webapp "$WEBAPP_TEST_DIR/my-webapp" "Test Webapp" >/dev/null 2>"$INIT_STDERR"
+INIT_EXIT_CODE=$?
+
+if [ $INIT_EXIT_CODE -ne 0 ]; then
+    fail "Failed to initialize webapp project (exit code: $INIT_EXIT_CODE)"
+    echo "  → init-project.sh stderr:" >&2
+    cat "$INIT_STDERR" >&2
+    echo "" >&2
 else
-    fail "Failed to initialize webapp project"
+    # Checkpoint: Verify directory was created
+    if [ ! -d "$WEBAPP_TEST_DIR/my-webapp" ]; then
+        fail "Webapp directory was not created: $WEBAPP_TEST_DIR/my-webapp"
+    else
+        echo "  ✓ Webapp directory created" >&2
+
+        # Checkpoint: Verify key files exist
+        if [ ! -f "$WEBAPP_TEST_DIR/my-webapp/package.json" ]; then
+            fail "package.json not found in webapp"
+            echo "  → Files in project:" >&2
+            ls -la "$WEBAPP_TEST_DIR/my-webapp" >&2 || true
+        else
+            echo "  ✓ package.json found" >&2
+
+            # Validate the created project using validation script
+            echo "  → Directory state before validation:" >&2
+            echo "    - Path: $WEBAPP_TEST_DIR/my-webapp" >&2
+            echo "    - Exists: $([ -d "$WEBAPP_TEST_DIR/my-webapp" ] && echo YES || echo NO)" >&2
+            echo "    - Files count: $(find "$WEBAPP_TEST_DIR/my-webapp" -type f 2>/dev/null | wc -l)" >&2
+            echo "  → Running validate-project-structure.sh..." >&2
+            set +e  # Temporarily disable exit on error to capture exit code
+            "$LIBRARY_ROOT/scripts/validate-project-structure.sh" "$WEBAPP_TEST_DIR/my-webapp" webapp 2>&1 | tee "$VALIDATE_STDERR" >&2
+            VALIDATE_EXIT_CODE=${PIPESTATUS[0]}
+            set -e  # Re-enable exit on error
+            echo "  → Validation exit code: $VALIDATE_EXIT_CODE" >&2
+            echo "  → Checking if exit code is non-zero..." >&2
+
+            if [ "$VALIDATE_EXIT_CODE" -ne 0 ]; then
+                fail "Initialized webapp fails structure validation (exit code: $VALIDATE_EXIT_CODE)"
+                echo "  → validate-project-structure.sh output:" >&2
+                cat "$VALIDATE_STDERR" >&2
+                echo "" >&2
+            else
+                pass "Initialized webapp passes structure validation"
+            fi
+        fi
+    fi
 fi
 
 print_section "Testing init-project.sh creates valid website structure"
@@ -84,15 +126,45 @@ WEBSITE_TEST_DIR="$TEST_TEMP_DIR/test-website-init"
 mkdir -p "$WEBSITE_TEST_DIR"
 
 # Initialize a website project (skip deps for faster CI testing)
-if "$LIBRARY_ROOT/scripts/init-project.sh" --skip-deps website "$WEBSITE_TEST_DIR/my-website" "Test Website" >/dev/null 2>&1; then
-    # Validate the created project using validation script
-    if "$LIBRARY_ROOT/scripts/validate-project-structure.sh" "$WEBSITE_TEST_DIR/my-website" website >/dev/null 2>&1; then
-        pass "Initialized website passes structure validation"
-    else
-        fail "Initialized website fails structure validation"
-    fi
+echo "  → Running init-project.sh for website..." >&2
+"$LIBRARY_ROOT/scripts/init-project.sh" --skip-deps website "$WEBSITE_TEST_DIR/my-website" "Test Website" >/dev/null 2>"$INIT_STDERR"
+INIT_EXIT_CODE=$?
+
+if [ $INIT_EXIT_CODE -ne 0 ]; then
+    fail "Failed to initialize website project (exit code: $INIT_EXIT_CODE)"
+    echo "  → init-project.sh stderr:" >&2
+    cat "$INIT_STDERR" >&2
+    echo "" >&2
 else
-    fail "Failed to initialize website project"
+    # Checkpoint: Verify directory was created
+    if [ ! -d "$WEBSITE_TEST_DIR/my-website" ]; then
+        fail "Website directory was not created: $WEBSITE_TEST_DIR/my-website"
+    else
+        echo "  ✓ Website directory created" >&2
+
+        # Checkpoint: Verify key files exist
+        if [ ! -f "$WEBSITE_TEST_DIR/my-website/package.json" ]; then
+            fail "package.json not found in website"
+            echo "  → Files in project:" >&2
+            ls -la "$WEBSITE_TEST_DIR/my-website" >&2 || true
+        else
+            echo "  ✓ package.json found" >&2
+
+            # Validate the created project using validation script
+            echo "  → Running validate-project-structure.sh..." >&2
+            "$LIBRARY_ROOT/scripts/validate-project-structure.sh" "$WEBSITE_TEST_DIR/my-website" website >"$VALIDATE_STDERR" 2>&1
+            VALIDATE_EXIT_CODE=$?
+
+            if [ $VALIDATE_EXIT_CODE -ne 0 ]; then
+                fail "Initialized website fails structure validation (exit code: $VALIDATE_EXIT_CODE)"
+                echo "  → validate-project-structure.sh output:" >&2
+                cat "$VALIDATE_STDERR" >&2
+                echo "" >&2
+            else
+                pass "Initialized website passes structure validation"
+            fi
+        fi
+    fi
 fi
 
 print_section "Testing init-project.sh creates valid python-cli structure"
@@ -102,15 +174,45 @@ CLI_TEST_DIR="$TEST_TEMP_DIR/test-cli-init"
 mkdir -p "$CLI_TEST_DIR"
 
 # Initialize a python-cli project (skip deps for faster CI testing)
-if "$LIBRARY_ROOT/scripts/init-project.sh" --skip-deps python-cli "$CLI_TEST_DIR/my-cli" "Test CLI" >/dev/null 2>&1; then
-    # Validate the created project using validation script
-    if "$LIBRARY_ROOT/scripts/validate-project-structure.sh" "$CLI_TEST_DIR/my-cli" python-cli >/dev/null 2>&1; then
-        pass "Initialized python-cli passes structure validation"
-    else
-        fail "Initialized python-cli fails structure validation"
-    fi
+echo "  → Running init-project.sh for python-cli..." >&2
+"$LIBRARY_ROOT/scripts/init-project.sh" --skip-deps python-cli "$CLI_TEST_DIR/my-cli" "Test CLI" >/dev/null 2>"$INIT_STDERR"
+INIT_EXIT_CODE=$?
+
+if [ $INIT_EXIT_CODE -ne 0 ]; then
+    fail "Failed to initialize python-cli project (exit code: $INIT_EXIT_CODE)"
+    echo "  → init-project.sh stderr:" >&2
+    cat "$INIT_STDERR" >&2
+    echo "" >&2
 else
-    fail "Failed to initialize python-cli project"
+    # Checkpoint: Verify directory was created
+    if [ ! -d "$CLI_TEST_DIR/my-cli" ]; then
+        fail "Python-cli directory was not created: $CLI_TEST_DIR/my-cli"
+    else
+        echo "  ✓ Python-cli directory created" >&2
+
+        # Checkpoint: Verify key files exist
+        if [ ! -f "$CLI_TEST_DIR/my-cli/pyproject.toml" ]; then
+            fail "pyproject.toml not found in python-cli"
+            echo "  → Files in project:" >&2
+            ls -la "$CLI_TEST_DIR/my-cli" >&2 || true
+        else
+            echo "  ✓ pyproject.toml found" >&2
+
+            # Validate the created project using validation script
+            echo "  → Running validate-project-structure.sh..." >&2
+            "$LIBRARY_ROOT/scripts/validate-project-structure.sh" "$CLI_TEST_DIR/my-cli" python-cli >"$VALIDATE_STDERR" 2>&1
+            VALIDATE_EXIT_CODE=$?
+
+            if [ $VALIDATE_EXIT_CODE -ne 0 ]; then
+                fail "Initialized python-cli fails structure validation (exit code: $VALIDATE_EXIT_CODE)"
+                echo "  → validate-project-structure.sh output:" >&2
+                cat "$VALIDATE_STDERR" >&2
+                echo "" >&2
+            else
+                pass "Initialized python-cli passes structure validation"
+            fi
+        fi
+    fi
 fi
 
 # ============================================================================
